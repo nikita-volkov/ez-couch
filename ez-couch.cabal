@@ -9,6 +9,24 @@ library
   hs-source-dirs:   src
   ghc-options:      -O2 -threaded -with-rtsopts=-N
   exposed-modules:  EZCouch
+                    EZCouch.Design
+                    EZCouch.ReadRequest
+                    EZCouch.Types
+                    EZCouch.UpdateRequest
+  other-modules:    Control.Retry
+                    Data.Aeson.FixedGeneric
+                    Data.Aeson.Functions
+                    Data.Aeson.Utils
+                    Data.Aeson.Parser.Internal
+                    Data.Aeson.Types.Class
+                    Data.Aeson.Types.Internal
+                    EZCouch.BulkPostRequest
+                    EZCouch.Encoding
+                    EZCouch.Ids
+                    EZCouch.Parsing
+                    EZCouch.Request
+                    Util.Logging
+                    Util.PrettyPrint
   build-depends:    base == 4.5.*,
                     lifted-base == 0.2.*,
                     basic-prelude >= 0.3.2.0 && < 0.4,
@@ -33,4 +51,5 @@ library
                     mtl == 2.1.*,
                     random == 1.0.*,
                     resourcet == 0.4.*,
-                    transformers == 0.3.*
+                    transformers == 0.3.*,
+                    deepseq == 1.3.*
