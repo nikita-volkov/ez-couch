@@ -5,7 +5,7 @@ import Prelude ()
 import BasicPrelude hiding (log)
 import Data.Time
 import System.Random
-import Database.CouchDB.High
+import EZCouch
 import Util.PrettyPrint
 import qualified Util.Logging as Logging
 
@@ -30,3 +30,5 @@ purge
 main = runCouch connection $ do
   purge
   generateEntitiesInDB
+  createOrUpdateView db "De" "Vi" "AAAA" Nothing
+  createOrUpdateView db "De" "Vi1" "AAAA" Nothing

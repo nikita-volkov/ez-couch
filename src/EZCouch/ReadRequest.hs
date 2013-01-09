@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-module Database.CouchDB.High.ReadRequest where
+module EZCouch.ReadRequest where
 
 import Prelude ()
 import BasicPrelude hiding (log)
@@ -16,10 +16,10 @@ import qualified Data.Conduit.List as Conduit
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as LBS
 
-import Database.CouchDB.High.Types
-import qualified Database.CouchDB.High.Request as Request
-import qualified Database.CouchDB.High.Parsing as Parsing
-import qualified Database.CouchDB.High.Encoding as Encoding
+import EZCouch.Types
+import qualified EZCouch.Request as Request
+import qualified EZCouch.Parsing as Parsing
+import qualified EZCouch.Encoding as Encoding
 
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text

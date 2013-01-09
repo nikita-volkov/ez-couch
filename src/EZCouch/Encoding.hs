@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-module Database.CouchDB.High.Encoding where
+module EZCouch.Encoding where
 
 import Prelude ()
 import BasicPrelude 
