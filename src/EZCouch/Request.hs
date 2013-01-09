@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-module Database.CouchDB.High.Request where
+module EZCouch.Request where
 
 import Prelude ()
 import BasicPrelude hiding (log)
@@ -25,7 +25,7 @@ import qualified Data.HashMap.Lazy as HashMap
 import qualified Data.Vector.Generic as GVector
 import qualified Data.Vector.Fusion.Stream as Stream
 
-import Database.CouchDB.High.Types
+import EZCouch.Types
 
 import qualified Util.Logging as Logging
 

@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Database.CouchDB.High.BulkPostRequest where
+module EZCouch.BulkPostRequest where
 
 import Prelude ()
 import BasicPrelude
 
-import Database.CouchDB.High.Request
-import Database.CouchDB.High.Types
-import qualified Database.CouchDB.High.Parsing as Parsing
+import EZCouch.Request
+import EZCouch.Types
+import qualified EZCouch.Parsing as Parsing
 
 import Database.CouchDB.Conduit 
 import Database.CouchDB.Conduit.View.Query

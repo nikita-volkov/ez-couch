@@ -5,7 +5,7 @@ import Prelude ()
 import BasicPrelude hiding (log)
 import Data.Time
 import System.Random
-import Database.CouchDB.High
+import EZCouch
 import Util.PrettyPrint
 import qualified Util.Logging as Logging
 

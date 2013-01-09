@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-module Database.CouchDB.High.Parsing where
+module EZCouch.Parsing where
 
 import Prelude ()
 import BasicPrelude
@@ -9,7 +9,7 @@ import Data.String (fromString)
 
 import Data.Generics
 import qualified Data.HashMap.Lazy as HashMap
-import Database.CouchDB.High.Types
+import EZCouch.Types
 import qualified Data.Aeson.Types as StaticAeson 
 import qualified Data.Aeson.Encode as StaticAeson
 import qualified Data.Aeson.Types as Aeson hiding (toJSON, fromJSON)

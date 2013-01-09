@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-module Database.CouchDB.High.UpdateRequest where
+module EZCouch.UpdateRequest where
 
 import Prelude ()
 import BasicPrelude
@@ -9,13 +9,13 @@ import Control.Exception.Lifted
 import Data.Either
 import Data.String (fromString)
 
-import Database.CouchDB.High.Ids 
-import Database.CouchDB.High.Request
-import Database.CouchDB.High.ReadRequest as ReadRequest
-import Database.CouchDB.High.Types
-import qualified Database.CouchDB.High.BulkPostRequest as BulkPostRequest
-import qualified Database.CouchDB.High.Encoding as Encoding
-import qualified Database.CouchDB.High.Parsing as Parsing
+import EZCouch.Ids 
+import EZCouch.Request
+import EZCouch.ReadRequest as ReadRequest
+import EZCouch.Types
+import qualified EZCouch.BulkPostRequest as BulkPostRequest
+import qualified EZCouch.Encoding as Encoding
+import qualified EZCouch.Parsing as Parsing
 
 import Data.Generics
 import Data.Aeson.Types as Aeson hiding (toJSON, fromJSON)

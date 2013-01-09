@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Database.CouchDB.High.Types where
+module EZCouch.Types where
 
 import Prelude ()
 import BasicPrelude 

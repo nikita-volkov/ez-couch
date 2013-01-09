@@ -1,4 +1,4 @@
-module Database.CouchDB.High.Ids (generateId) where
+module EZCouch.Ids (generateId) where
 
 import Data.Char
 import Data.IntMap (fromList, (!))
