@@ -30,3 +30,5 @@ purge
 main = runCouch connection $ do
   purge
   generateEntitiesInDB
+  createOrUpdateView db "De" "Vi" "AAAA" Nothing
+  createOrUpdateView db "De" "Vi1" "AAAA" Nothing
