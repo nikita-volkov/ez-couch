@@ -1,7 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module EZCouch (runWithManager, runCouch, module UpdateRequest, module ReadRequest, module Types, MonadCouch(..), Path(..), def, CouchConnection(..)) where
+module EZCouch (runWithManager, runCouch, module UpdateRequest, module ReadRequest, module Types, module Design, MonadCouch(..), Path(..), def, CouchConnection(..)) where
 
 import Prelude ()
 import BasicPrelude
@@ -15,6 +15,7 @@ import Database.CouchDB.Conduit as Conduit
 import EZCouch.UpdateRequest as UpdateRequest
 import EZCouch.Types as Types
 import EZCouch.ReadRequest as ReadRequest
+import EZCouch.Design as Design
 
 runWithManager mgr cx
   = withCouchConnection mgr cx . runReaderT . runResourceT . lift
