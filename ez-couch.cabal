@@ -8,6 +8,7 @@ cabal-version:      >=1.8
 library
   hs-source-dirs:   src
   ghc-options:      -O2 -threaded -with-rtsopts=-N
+  extensions:       PatternGuards
   exposed-modules:  EZCouch
                     EZCouch.Design
                     EZCouch.ReadRequest
