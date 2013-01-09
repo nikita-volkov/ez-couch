@@ -8,11 +8,11 @@ import BasicPrelude
 import Data.Text.Encoding
 import Data.Generics
 
-import qualified Database.CouchDB.Conduit.Design as Couch
+import qualified Database.CouchDB.Conduit.Design as Conduit
 import EZCouch.Types
 
 createOrUpdateView db design viewName viewMap viewReduce = do
-  Couch.couchPutView dbB designB viewNameB viewMapB viewReduceB
+  Conduit.couchPutView dbB designB viewNameB viewMapB viewReduceB
   where
     dbB = encodeUtf8 db
     designB = encodeUtf8 design
