@@ -54,14 +54,14 @@ rowToPersisted o @ (Aeson.Object m)
     = throwUnexpectedRowValueException o
 
 rowToMaybePersistedByKey o @ (Aeson.Object m) 
-  -- | deleted
+  -- deleted
   | Just id <- HashMap.lookup "id" m,
     Just (Aeson.Object valueM) <- HashMap.lookup "value" m,
     Just (Aeson.Bool True) <- HashMap.lookup "deleted" valueM,
     Just rev <- HashMap.lookup "rev" valueM,
     Just key <- HashMap.lookup "key" m
     = (fromJSON key, Nothing)
-  -- | found
+  -- found
   | Just id <- HashMap.lookup "id" m,
     Just (Aeson.Object valueM) <- HashMap.lookup "value" m,
     Just doc <- HashMap.lookup "doc" m,
@@ -69,7 +69,7 @@ rowToMaybePersistedByKey o @ (Aeson.Object m)
     Just rev <- HashMap.lookup "_rev" docM,
     Just key <- HashMap.lookup "key" m
     = (fromJSON key, Just (Persisted (fromJSON id) (fromJSON rev) (fromJSON doc)))
-  -- | not found
+  -- not found
   | Just "not_found" <- HashMap.lookup "error" m,
     Just key <- HashMap.lookup "key" m
     = (fromJSON key, Nothing)
