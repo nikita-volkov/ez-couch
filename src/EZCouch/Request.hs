@@ -36,9 +36,9 @@ smartRead path qps
   | Just keysJSON <- qpsKeysJSON qps,
     body <- "{\"keys\":" `LBS.append` keysJSON `LBS.append` "}",
     qps' <- filter f qps
-  = request readRowsPipe HTTP.methodPost path qps' body
+  = request readRowsSink HTTP.methodPost path qps' body
   | otherwise
-  = request readRowsPipe HTTP.methodGet path qps ""
+  = request readRowsSink HTTP.methodGet path qps ""
   where
     f (DB.QPKeys _) = False
     f (DB.QPStartKey _) = False
@@ -49,14 +49,17 @@ smartRead path qps
     qpsKeysJSON _ = Nothing
 
 
-postRead = request readRowsPipe HTTP.methodPost
-getRead = request readRowsPipe HTTP.methodGet
-postUpdate = request updateRowsPipe HTTP.methodPost
+postRead = request readRowsSink HTTP.methodPost
+getRead = request readRowsSink HTTP.methodGet
+getReadOne = request sink HTTP.methodGet
+  where
+    sink = Atto.sinkParser (Aeson.json Atto.<?> "json object")
+postUpdate = request updateRowsSink HTTP.methodPost
 
 request 
   :: DB.MonadCouch m 
-  => Conduit.Sink ByteString m (Conduit.Source m Aeson.Value)
-  -- ^ Pipe function implementation
+  => Conduit.Sink ByteString m a
+  -- ^ Sink function implementation
   -> HTTP.Method
   -- ^ Request method
   -> DB.Path
@@ -65,19 +68,20 @@ request
   -- ^ Request arguments
   -> LBS.ByteString
   -- ^ Request body
-  -> m (Conduit.Source m Aeson.Value)
-request pipe method path qps body 
+  -> m a
+request sink method path qps body 
   = do
       log 0 $ "Perfroming a " ++ (read . show $ method :: Text) ++ " at " ++ (read . show $ path) ++ (read . show $ HTTP.renderQuery True query)
       HTTP.Response _ _ _ src 
         <- DB.couch method path headers query (HTTP.RequestBodyLBS body) DB.protect'
-      src Conduit.$$+- pipe
+      src Conduit.$$+- sink
   where
     headers = [("Content-Type", "application/json")]
     query = DB.mkQuery qps
 
-readRowsPipe :: Conduit.MonadResource m => Conduit.Sink ByteString m (Conduit.Source m Aeson.Value)
-readRowsPipe = do 
+
+readRowsSink :: Conduit.MonadResource m => Conduit.Sink ByteString m (Conduit.Source m Aeson.Value)
+readRowsSink = do 
   o <- Atto.sinkParser (Aeson.json Atto.<?> "json object")
   rows <- case o of
       (Aeson.Object raw') -> case HashMap.lookup "rows" raw' of
@@ -89,8 +93,8 @@ readRowsPipe = do
     valToObj (Aeson.Object o) = o
     valToObj _ = throw $ DB.CouchInternalError "row is not object"
 
-updateRowsPipe :: Conduit.MonadResource m => Conduit.Sink ByteString m (Conduit.Source m Aeson.Value)
-updateRowsPipe = do 
+updateRowsSink :: Conduit.MonadResource m => Conduit.Sink ByteString m (Conduit.Source m Aeson.Value)
+updateRowsSink = do 
   Aeson.Array rows <- Atto.sinkParser (Aeson.json Atto.<?> "json object")
   return $ vectorSource rows 
 
