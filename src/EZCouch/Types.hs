@@ -19,5 +19,3 @@ data HighException
 instance Exception HighException
 
 type DB = Text
-type View = Text
-type DesignAndView = (Text, Text)
