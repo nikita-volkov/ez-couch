@@ -9,6 +9,7 @@ import Data.Generics
 import Database.CouchDB.Conduit 
 
 data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persistedValue :: a }
+  deriving (Show, Data, Typeable, Eq, Ord)
 
 data HighException 
   = ParsingException Text 
