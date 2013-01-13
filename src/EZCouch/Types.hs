@@ -8,8 +8,10 @@ import BasicPrelude
 import Data.Generics
 import Database.CouchDB.Conduit 
 
-data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persistedValue :: a }
+
+data Persisted a = Persisted { persistedId :: ByteString, persistedRev :: ByteString, persistedValue :: a }
   deriving (Show, Data, Typeable, Eq, Ord)
+
 
 data HighException 
   = ParsingException Text 
@@ -18,4 +20,25 @@ data HighException
   deriving (Show, Data, Typeable)
 instance Exception HighException
 
-type DB = Text
+
+data ReadOptions k
+  = ReadOptions {
+      readOptionsKeys :: Maybe [k],
+      readOptionsView :: Maybe ByteString,
+      readOptionsDescending :: Bool,
+      readOptionsLimit :: Maybe Int,
+      readOptionsSkip :: Int
+    }
+  deriving (Show, Data, Typeable, Eq, Ord)
+readOptions = ReadOptions Nothing Nothing False Nothing 0
+
+
+data ConnectionSettings 
+  = ConnectionSettings {  
+      connectionSettingsHost :: ByteString,
+      connectionSettingsPort :: Int,
+      connectionSettingsAuth :: Maybe (ByteString, ByteString),
+      connectionSettingsDatabase :: ByteString
+    }
+
+defaultPort = 5984

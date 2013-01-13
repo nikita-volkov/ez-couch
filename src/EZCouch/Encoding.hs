@@ -4,18 +4,13 @@
 module EZCouch.Encoding where
 
 import Prelude ()
-import BasicPrelude 
-
-import Data.String (fromString)
+import ClassyPrelude 
 import Data.Generics
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy.Char8 as LBS
-
-import qualified Data.Aeson.Types as Aeson hiding (toJSON, fromJSON)
+import qualified Data.ByteString.Lazy.Char8 -- export instances for LByteString
 import qualified Data.Aeson.FixedGeneric as Aeson
 
 docType :: (Data a) => a -> Text
-docType = fromString . showConstr . head . dataTypeConstrs . dataTypeOf 
+docType = fromString . showConstr . maybe undefined id . listToMaybe . dataTypeConstrs . dataTypeOf 
 
-keysBody :: (Data a) => a -> LBS.ByteString
-keysBody keys = "{\"keys\":" `LBS.append` Aeson.encode keys `LBS.append` "}"
+keysBody :: (Data a) => a -> LByteString
+keysBody keys = "{\"keys\":" ++ Aeson.encode keys ++ "}"
