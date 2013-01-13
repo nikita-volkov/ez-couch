@@ -9,6 +9,7 @@ import Data.Text.Lazy (toStrict)
 import Data.Generics
 import EZCouch.Types
 import qualified Data.Aeson as Aeson 
+import qualified Data.Aeson.FixedGeneric as GAeson 
 import qualified Data.Conduit.Util as Conduit
 import qualified Data.Conduit.Attoparsec as Atto
 import qualified Data.Attoparsec as Atto
@@ -46,29 +47,29 @@ vectorSource vec = Conduit.sourceState (GVector.stream vec) f
 rowToIdEither o @ (Aeson.Object m) 
   | Just rev <- lookup "rev" m,
     Just id <- lookup "id" m
-    = Right $ (id, rev)
+    = Right $ Right $ (id, rev)
   | Just code <- lookup "error" m,
     Just reason <- lookup "reason" m,
     Just id <- lookup "id" m
-    = Left $ id
+    = Right $ Left $ id
   | otherwise
-    = throwUnexpectedRowValueException o
+    = Left $ unexpectedRowValueText o
 
 rowToBool o @ (Aeson.Object m) 
   | Just id <- lookup "id" m,
     Just (Aeson.Object valueM) <- lookup "value" m,
     Just (Aeson.Bool True) <- lookup "deleted" valueM,
     Just key <- lookup "key" m
-    = (fromJSON key, True)
+    = (,) <$> fromJSON key <*> pure True
   | Just id <- lookup "id" m,
     Just _ <- lookup "value" m,
     Just key <- lookup "key" m
-    = (fromJSON key, True)
+    = (,) <$> fromJSON key <*> pure True
   | Just "not_found" <- lookup "error" m,
     Just key <- lookup "key" m
-    = (fromJSON key, False)
+    = (,) <$> fromJSON key <*> pure False
   | otherwise
-    = throwUnexpectedRowValueException o
+    = Left $ unexpectedRowValueText o
 
 rowToPersisted o @ (Aeson.Object m) 
   | Just id <- lookup "id" m,
@@ -76,9 +77,9 @@ rowToPersisted o @ (Aeson.Object m)
     Just doc <- lookup "doc" m,
     Aeson.Object docM <- doc,
     Just rev <- lookup "_rev" docM
-    = Persisted (fromJSON id) (fromJSON rev) (fromJSON doc)
+    = Persisted <$> fromJSON id <*> fromJSON rev <*> fromJSON doc
   | otherwise
-    = throwUnexpectedRowValueException o
+    = Left $ unexpectedRowValueText o
 
 rowToMaybePersistedByKey o @ (Aeson.Object m) 
   -- deleted
@@ -87,7 +88,7 @@ rowToMaybePersistedByKey o @ (Aeson.Object m)
     Just (Aeson.Bool True) <- lookup "deleted" valueM,
     Just rev <- lookup "rev" valueM,
     Just key <- lookup "key" m
-    = (fromJSON key, Nothing)
+    = (,) <$> fromJSON key <*> pure Nothing
   -- found
   | Just id <- lookup "id" m,
     Just (Aeson.Object valueM) <- lookup "value" m,
@@ -95,18 +96,18 @@ rowToMaybePersistedByKey o @ (Aeson.Object m)
     Aeson.Object docM <- doc,
     Just rev <- lookup "_rev" docM,
     Just key <- lookup "key" m
-    = (fromJSON key, Just (Persisted (fromJSON id) (fromJSON rev) (fromJSON doc)))
+    = (,) <$> fromJSON key <*> (Just <$> (Persisted <$> fromJSON id <*> fromJSON rev <*> fromJSON doc))
   -- not found
   | Just "not_found" <- lookup "error" m,
     Just key <- lookup "key" m
-    = (fromJSON key, Nothing)
+    = (,) <$> fromJSON key <*> pure Nothing
   | otherwise
-    = throwUnexpectedRowValueException o
+    = Left $ unexpectedRowValueText o
 
 
-fromJSON v = case Aeson.fromJSON v of
-  Aeson.Success z -> z
-  Aeson.Error s -> throw $ ParsingException $ fromString $ s
+fromJSON v = case GAeson.fromJSON v of
+  Aeson.Success z -> Right $ z
+  Aeson.Error s -> Left $ fromString $ s
 
-throwUnexpectedRowValueException o
-  = throw $ ParsingException $ "Unexpected row value: " ++ (toStrict . decodeUtf8 $ Aeson.encode o)
+unexpectedRowValueText o
+  = "Unexpected row value: " ++ (toStrict . decodeUtf8 $ Aeson.encode o)
