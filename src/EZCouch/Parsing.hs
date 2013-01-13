@@ -3,15 +3,45 @@
 module EZCouch.Parsing where
 
 import Prelude ()
-import ClassyPrelude
+import ClassyPrelude.Conduit
 import Control.Exception.Lifted 
 import Data.Text.Lazy (toStrict)
 import Data.Generics
 import EZCouch.Types
-import qualified Data.Aeson.Types as StaticAeson 
-import qualified Data.Aeson.Encode as StaticAeson
-import qualified Data.Aeson.Types as Aeson hiding (toJSON, fromJSON)
-import qualified Data.Aeson.FixedGeneric as Aeson
+import qualified Data.Aeson as Aeson 
+import qualified Data.Conduit.Util as Conduit
+import qualified Data.Conduit.Attoparsec as Atto
+import qualified Data.Attoparsec as Atto
+
+import qualified Data.Vector.Generic as GVector
+import qualified Data.Vector.Fusion.Stream as Stream
+
+
+oneRowSink :: MonadResource m => Sink ByteString m Aeson.Value
+oneRowSink = Atto.sinkParser (Aeson.json Atto.<?> "json object")
+
+readRowsSink :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
+readRowsSink = do 
+  o <- Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON")
+  rows <- case o of
+    Aeson.Object raw' -> case lookup "rows" raw' of
+      Just (Aeson.Array r) -> return r
+      _ -> return GVector.empty
+    _ -> monadThrow $ ParsingException "Not an Object"
+  return $ vectorSource rows
+
+updateRowsSink :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
+updateRowsSink = do 
+  Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON") >>= \r -> case r of
+    Aeson.Array rows -> return $ vectorSource rows 
+    _ -> monadThrow $ ParsingException "Not an Array"
+
+vectorSource :: (Monad m, GVector.Vector v a) => v a -> Source m a
+vectorSource vec = Conduit.sourceState (GVector.stream vec) f
+  where f stream | Stream.null stream = return Conduit.StateClosed
+                 | otherwise = return $ Conduit.StateOpen 
+                      (Stream.tail stream) (Stream.head stream)
+
 
 rowToIdEither o @ (Aeson.Object m) 
   | Just rev <- lookup "rev" m,
@@ -79,4 +109,4 @@ fromJSON v = case Aeson.fromJSON v of
   Aeson.Error s -> throw $ ParsingException $ fromString $ s
 
 throwUnexpectedRowValueException o
-  = throw $ ParsingException $ "Unexpected row value: " ++ (toStrict . decodeUtf8 $ StaticAeson.encode o)
+  = throw $ ParsingException $ "Unexpected row value: " ++ (toStrict . decodeUtf8 $ Aeson.encode o)
