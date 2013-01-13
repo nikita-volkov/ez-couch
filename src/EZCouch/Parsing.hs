@@ -19,7 +19,7 @@ import qualified Data.Vector.Fusion.Stream as Stream
 
 
 oneRowSink :: MonadResource m => Sink ByteString m Aeson.Value
-oneRowSink = Atto.sinkParser (Aeson.json Atto.<?> "json object")
+oneRowSink = Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON")
 
 readRowsSink :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
 readRowsSink = do 
