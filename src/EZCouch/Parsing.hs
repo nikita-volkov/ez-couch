@@ -44,34 +44,27 @@ vectorSource vec = Conduit.sourceState (GVector.stream vec) f
                       (Stream.tail stream) (Stream.head stream)
 
 
-rowToIdEither o @ (Aeson.Object m) 
-  | Just rev <- lookup "rev" m,
-    Just id <- lookup "id" m
-    = Right $ Right $ (id, rev)
-  | Just code <- lookup "error" m,
-    Just reason <- lookup "reason" m,
-    Just id <- lookup "id" m
-    = Right $ Left $ id
-  | otherwise
-    = Left $ unexpectedRowValueText o
+type RowParser a = Aeson.Value -> Either Text a
 
-rowToBool o @ (Aeson.Object m) 
+keyExistsRowParser :: (Data k) => RowParser (k, Bool)
+keyExistsRowParser o @ (Aeson.Object m) 
+  | Just "not_found" <- lookup "error" m,
+    Just key <- lookup "key" m
+    = (,) <$> fromJSON key <*> pure False
   | Just id <- lookup "id" m,
     Just (Aeson.Object valueM) <- lookup "value" m,
     Just (Aeson.Bool True) <- lookup "deleted" valueM,
     Just key <- lookup "key" m
-    = (,) <$> fromJSON key <*> pure True
+    = (,) <$> fromJSON key <*> pure False
   | Just id <- lookup "id" m,
     Just _ <- lookup "value" m,
     Just key <- lookup "key" m
     = (,) <$> fromJSON key <*> pure True
-  | Just "not_found" <- lookup "error" m,
-    Just key <- lookup "key" m
-    = (,) <$> fromJSON key <*> pure False
   | otherwise
     = Left $ unexpectedRowValueText o
 
-rowToPersisted o @ (Aeson.Object m) 
+persistedRowParser :: (Data a) => RowParser (Persisted a)
+persistedRowParser o @ (Aeson.Object m) 
   | Just id <- lookup "id" m,
     Just (Aeson.Object valueM) <- lookup "value" m,
     Just doc <- lookup "doc" m,
@@ -81,7 +74,8 @@ rowToPersisted o @ (Aeson.Object m)
   | otherwise
     = Left $ unexpectedRowValueText o
 
-rowToMaybePersistedByKey o @ (Aeson.Object m) 
+maybePersistedByKeyRowParser :: (Data a, Data k) => RowParser (k, Maybe (Persisted a))
+maybePersistedByKeyRowParser o @ (Aeson.Object m) 
   -- deleted
   | Just id <- lookup "id" m,
     Just (Aeson.Object valueM) <- lookup "value" m,
