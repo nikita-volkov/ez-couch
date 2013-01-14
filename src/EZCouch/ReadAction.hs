@@ -47,9 +47,17 @@ readEntities options
   = readAction True options 
     >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.persistedRowParser
 
--- -- readIds :: ReadOptions -> Action [ByteString]
--- -- TODO: Should return ids for non-view queries
--- readKeys :: (Data k) => ByteString -> ReadOptions k -> Action [k]
--- readExists :: (Data k) => ByteString -> ReadOptions k -> Action [(k, Bool)]
--- readCount :: (Data k) => ReadOptions k -> Action Int
--- readCount = fmap length . readKeys
+readExists :: (Data a, Data k) => ReadOptions k -> Action a [(k, Bool)]
+readExists options
+  = readAction False options
+    >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.keyExistsRowParser
+    
+-- readIds :: ReadOptions -> Action [ByteString]
+
+-- TODO: Should return ids for non-view queries
+readKeys :: (Data a, Data k) => ReadOptions k -> Action a [k]
+readKeys = fmap (mapMaybe f) . readExists
+  where f (k, b) = if b then Just k else Nothing
+
+readCount :: (Data a, Data k) => ReadOptions k -> Action a Int
+readCount = fmap length . readKeys
