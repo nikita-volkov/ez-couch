@@ -6,7 +6,7 @@ import Prelude ()
 import ClassyPrelude.Conduit
 import Control.Exception.Lifted 
 import Data.Text.Lazy (toStrict)
-import Data.Generics
+import Data.Generics (Typeable, Data)
 import EZCouch.Types
 import qualified Data.Aeson as Aeson 
 import qualified Data.Aeson.FixedGeneric as GAeson 
