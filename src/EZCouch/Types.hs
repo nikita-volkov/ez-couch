@@ -13,12 +13,12 @@ data Persisted a = Persisted { persistedId :: ByteString, persistedRev :: ByteSt
   deriving (Show, Data, Typeable, Eq, Ord)
 
 
-data HighException 
+data EZCouchException 
   = ParsingException Text 
   | OperationException Text 
   | ResponseException Text 
   deriving (Show, Data, Typeable)
-instance Exception HighException
+instance Exception EZCouchException
 
 
 data ReadOptions k
