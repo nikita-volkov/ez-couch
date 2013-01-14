@@ -8,31 +8,36 @@ import Control.Monad.Trans.Resource
 import EZCouch.Types
 import Network.HTTP.Types as HTTP
 import Network.HTTP.Conduit as HTTP
-import qualified Database.CouchDB.Conduit as DB
-import qualified Database.CouchDB.Conduit.View.Query as DB
+import qualified Database.CouchDB.Conduit as CC
+import qualified Database.CouchDB.Conduit.View.Query as CC
 import qualified Util.Logging as Logging
 
 log lvl = Logging.log "action" lvl
 
-newtype Action a = Action { run :: ConnectionSettings -> Manager -> IO a }
+data Action a b = Action { run :: ConnectionSettings -> Manager -> IO b }
   deriving (Functor)
-instance Monad Action where
+instance Monad (Action a) where
   return a = Action $ \_ _ -> return a
   a >>= b = join $ fmap b a
-instance Applicative Action where
+instance Applicative (Action a) where
   (<*>) = ap
   pure = return
+
+-- | A helper for generic functions
+actionEntityType :: Action a b -> a
+actionEntityType = undefined
 
 action 
   :: Method
   -- ^ Request method
   -> [ByteString]
   -- ^ Request path segments
-  -> [DB.CouchQP]
+  -> [CC.CouchQP]
   -- ^ Request arguments
   -> LByteString
   -- ^ Request body
-  -> Action (ResumableSource (ResourceT IO) ByteString)
+  -> Action a (ResumableSource (ResourceT IO) ByteString)
+  -- ^ An action over entity 'a'
 action method path qps body 
   = Action $ \settings manager -> do
       let req = request settings
@@ -44,14 +49,14 @@ action method path qps body
       return body
   where
     headers = [("Content-Type", "application/json")]
-    query = renderQuery False $ DB.mkQuery qps
+    query = renderQuery False $ CC.mkQuery qps
     request (ConnectionSettings host port auth database) 
       = authenticated $ def {
           method = method,
           host = host,
           requestHeaders = headers,
           port = port,
-          path = DB.mkPath $ database : path,
+          path = CC.mkPath $ database : path,
           queryString = query,
           requestBody = RequestBodyLBS body,
           checkStatus = checkStatus
