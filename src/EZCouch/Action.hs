@@ -3,7 +3,7 @@ module EZCouch.Action where
 
 import Prelude ()
 import ClassyPrelude.Conduit hiding (log)
-import Control.Exception
+import Control.Exception (SomeException(..))
 import Control.Monad.Trans.Resource
 import EZCouch.Types
 import Network.HTTP.Types as HTTP
@@ -24,6 +24,12 @@ instance Applicative (Action a) where
   pure = return
 instance MonadIO (Action a) where
   liftIO io = Action $ \_ _ -> io
+instance MonadThrow (Action a) where
+  monadThrow = liftIO . throwIO
+instance MonadUnsafeIO (Action a) where 
+  unsafeLiftIO = liftIO
+instance MonadResource (Action a) where
+  liftResourceT = liftIO . runResourceT
 
 -- | A helper for generic functions
 actionEntityType :: Action a b -> a
