@@ -1,13 +1,13 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE OverloadedStrings, ScopedTypeVariables, NoMonomorphismRestriction #-}
-
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
 import Prelude ()
-import BasicPrelude hiding (log)
+import ClassyPrelude hiding (log)
 import Data.Time
 import System.Random
+import Control.Concurrent
 import EZCouch
 import Util.PrettyPrint
 import qualified Util.Logging as Logging
+import Debug.Trace
 
 connection = def {
   couchHost = "mojojojo.cloudant.com"
@@ -29,6 +29,14 @@ purge
 
 main = runCouch connection $ do
   purge
-  generateEntitiesInDB
-  createOrUpdateView db "De" "Vi" "AAAA" Nothing
-  createOrUpdateView db "De" "Vi1" "AAAA" Nothing
+  -- generateEntitiesInDB
+  testConnectionAlive 0
+  -- createOrUpdateView db "De" "Vi" "AAAA" Nothing
+  -- createOrUpdateView db "De" "Vi1" "AAAA" Nothing
+
+testConnectionAlive i = trace (show i) $ if i < 1000
+  then do
+    entity <- liftIO $ generateEntity
+    create db entity
+    testConnectionAlive $ i + 1
+  else return ()

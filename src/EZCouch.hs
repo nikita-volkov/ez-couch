@@ -1,6 +1,4 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
 module EZCouch (runWithManager, runCouch, module UpdateRequest, module ReadRequest, module Types, module Design, MonadCouch(..), Path(..), def, CouchConnection(..)) where
 
 import Prelude ()
