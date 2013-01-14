@@ -21,8 +21,8 @@ import qualified Data.Vector.Fusion.Stream as Stream
 oneRowSink :: MonadResource m => Sink ByteString m Aeson.Value
 oneRowSink = Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON")
 
-readRowsSink :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
-readRowsSink = do 
+multipleRowsSink1 :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
+multipleRowsSink1 = do 
   o <- Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON")
   rows <- case o of
     Aeson.Object raw' -> case lookup "rows" raw' of
@@ -31,8 +31,8 @@ readRowsSink = do
     _ -> monadThrow $ ParsingException "Not an Object"
   return $ vectorSource rows
 
-updateRowsSink :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
-updateRowsSink = do 
+multipleRowsSink2 :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
+multipleRowsSink2 = do 
   Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON") >>= \r -> case r of
     Aeson.Array rows -> return $ vectorSource rows 
     _ -> monadThrow $ ParsingException "Not an Array"
