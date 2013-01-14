@@ -3,6 +3,7 @@ module EZCouch.ReadAction where
 
 import Prelude ()
 import ClassyPrelude.Conduit hiding (log)
+import Control.Monad.Trans.Resource
 import Data.Generics
 import EZCouch.Action
 import EZCouch.Types
@@ -42,12 +43,9 @@ readAction includeDocs (ReadOptions keys view desc limit skip) = result
 
 
 readEntities :: (Data a, Data k) => ReadOptions k -> Action a [Persisted a]
-readEntities options = do
-  response <- readAction True options
-  liftIO $ runResourceT $ do
-    rows <- response $$+- Parsing.multipleRowsSink1
-    result <- rows $= map Parsing.persistedRowParser $$ consume
-    either (monadThrow . ParsingException) return $ sequence result
+readEntities options 
+  = readAction True options 
+    >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.persistedRowParser
 
 -- -- readIds :: ReadOptions -> Action [ByteString]
 -- -- TODO: Should return ids for non-view queries

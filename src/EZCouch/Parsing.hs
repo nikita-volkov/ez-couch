@@ -4,9 +4,9 @@ module EZCouch.Parsing where
 
 import Prelude ()
 import ClassyPrelude.Conduit
-import Control.Exception.Lifted 
 import Data.Text.Lazy (toStrict)
 import Data.Generics (Typeable, Data)
+import Control.Monad.Trans.Resource (liftResourceT)
 import EZCouch.Types
 import qualified Data.Aeson as Aeson 
 import qualified Data.Aeson.FixedGeneric as GAeson 
@@ -16,6 +16,12 @@ import qualified Data.Attoparsec as Atto
 
 import qualified Data.Vector.Generic as GVector
 import qualified Data.Vector.Fusion.Stream as Stream
+
+
+parse rowsSink parser response = liftResourceT $ do
+  rows <- response $$+- rowsSink
+  result <- rows $= map parser $$ consume
+  either (monadThrow . ParsingException) return $ sequence result
 
 
 oneRowSink :: MonadResource m => Sink ByteString m Aeson.Value
