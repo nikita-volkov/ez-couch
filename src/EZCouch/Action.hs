@@ -22,6 +22,8 @@ instance Monad (Action a) where
 instance Applicative (Action a) where
   (<*>) = ap
   pure = return
+instance MonadIO (Action a) where
+  liftIO io = Action $ \_ _ -> io
 
 -- | A helper for generic functions
 actionEntityType :: Action a b -> a
