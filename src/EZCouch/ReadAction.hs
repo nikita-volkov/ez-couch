@@ -41,10 +41,14 @@ readAction includeDocs (ReadOptions keys view desc limit skip) = result
           | otherwise = ["_all_docs"]
 
 
--- readEntities :: (Data a, Data k) => ReadOptions k -> Action a [Persisted a]
--- readEntities options = do
---   response <- readAction True options
---   response $$+- Parsing.multipleRowsSink1 Parsing.persistedRowParser
+readEntities :: (Data a, Data k) => ReadOptions k -> Action a [Persisted a]
+readEntities options = do
+  response <- readAction True options
+  liftIO $ runResourceT $ do
+    rows <- response $$+- Parsing.multipleRowsSink1
+    result <- rows $= map Parsing.persistedRowParser $$ consume
+    either (monadThrow . ParsingException) return $ sequence result
+
 -- -- readIds :: ReadOptions -> Action [ByteString]
 -- -- TODO: Should return ids for non-view queries
 -- readKeys :: (Data k) => ByteString -> ReadOptions k -> Action [k]
