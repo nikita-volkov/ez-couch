@@ -52,6 +52,18 @@ vectorSource vec = Conduit.sourceState (GVector.stream vec) f
 
 type RowParser a = Aeson.Value -> Either Text a
 
+idRevRowParser :: RowParser (Either ByteString (ByteString, ByteString))
+idRevRowParser o @ (Aeson.Object m) 
+  | Just rev <- lookup "rev" m,
+    Just id <- lookup "id" m
+    = Right <$> ((,) <$> fromJSON id <*> fromJSON rev)
+  | Just code <- lookup "error" m,
+    Just reason <- lookup "reason" m,
+    Just id <- lookup "id" m
+    = Left <$> fromJSON id
+  | otherwise
+    = Left $ unexpectedRowValueText o
+
 keyExistsRowParser :: (Data k) => RowParser (k, Bool)
 keyExistsRowParser o @ (Aeson.Object m) 
   | Just "not_found" <- lookup "error" m,
