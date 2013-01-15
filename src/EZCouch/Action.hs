@@ -16,7 +16,8 @@ import qualified Util.Logging as Logging
 log lvl = Logging.log "action" lvl
 
 data Action a b = Action { run :: ConnectionSettings -> Manager -> IO b }
-  deriving (Functor)
+instance Functor (Action a) where
+  fmap f action = Action $ \s m -> fmap f $ run action s m
 instance Monad (Action a) where
   return a = Action $ \_ _ -> return a
   a >>= b = Action $ \c m -> run a c m >>= \a' -> run (b a') c m
