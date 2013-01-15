@@ -85,6 +85,9 @@ createMultiple = retry 10
         else
           throwIO $ OperationException $ "Failed to generate unique ids"
 
+create :: (Data a) => a -> Action a (Persisted a)
+create = return . singleton >=> createMultiple >=> 
+  maybe (throwIO $ OperationException "Failed to create entity") return . listToMaybe
 
 updateMultiple :: (Data a) => [Persisted a] -> Action a [Persisted a]
 updateMultiple pVals
@@ -97,3 +100,7 @@ updateMultiple pVals
     lookupThrowing id cache = case lookup id cache of
       Just val -> return val
       Nothing -> throwIO $ ResponseException $ "Unexpected id: " ++ show id
+
+update :: (Data a) => Persisted a -> Action a (Persisted a)
+update = return . singleton >=> updateMultiple >=> 
+  maybe (throwIO $ OperationException "Failed to update entity") return . listToMaybe
