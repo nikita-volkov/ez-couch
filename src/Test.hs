@@ -25,7 +25,7 @@ generateEntity = do
   return $ A time Nothing
 
 purge = do
-  as :: [Persisted A] <- readMultiple (readOptions :: ReadOptions ByteString)
+  as :: [Persisted A] <- readMultiple readOptions
   liftIO $ print $ length as 
   deleteMultiple as
 

@@ -30,6 +30,8 @@ data ReadOptions k
       readOptionsSkip :: Int
     }
   deriving (Show, Data, Typeable, Eq, Ord)
+  
+readOptions :: ReadOptions ByteString
 readOptions = ReadOptions Nothing Nothing False Nothing 0
 
 
