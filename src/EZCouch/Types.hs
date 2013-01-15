@@ -41,4 +41,4 @@ data ConnectionSettings
       connectionSettingsDatabase :: ByteString
     }
 
-defaultPort = 5984
+defaultPort = 5984 :: Int
