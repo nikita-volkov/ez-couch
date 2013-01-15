@@ -42,8 +42,8 @@ readAction includeDocs (ReadOptions keys view desc limit skip) = result
           | otherwise = ["_all_docs"]
 
 
-readEntities :: (Data a, Data k) => ReadOptions k -> Action a [Persisted a]
-readEntities options 
+readMultiple :: (Data a, Data k) => ReadOptions k -> Action a [Persisted a]
+readMultiple options 
   = readAction True options 
     >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.persistedRowParser
 
