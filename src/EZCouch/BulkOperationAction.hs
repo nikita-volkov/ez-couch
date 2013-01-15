@@ -60,11 +60,10 @@ createMultipleWithIds idsToVals
       >>= mapM convertResult
   where
     valById = asMap $ fromList idsToVals
-    convertResult (id, Nothing) 
-      | Just val <- lookup id valById = return $ Left (id, val)
-    convertResult (id, Just rev) 
-      | Just val <- lookup id valById = return $ Right $ Persisted id rev val
-    convertResult (id, _) = throwIO $ ResponseException $ "Unexpected id: " ++ show id
+    convertResult (id, Nothing) = fmap Left $ 
+      (,) <$> pure id <*> lookupThrowing id valById
+    convertResult (id, Just rev) = fmap Right $ 
+      Persisted <$> pure id <*> pure rev <*> lookupThrowing id valById
 
 createMultiple :: (Data a) => [a] -> Action a [Persisted a]
 createMultiple = retry 10 
@@ -97,10 +96,11 @@ updateMultiple pVals
     valById = asMap $ fromList [(id, val) | Persisted id _ val <- pVals]
     convertResult (id, Nothing) = throwIO $ OperationException $ "Couldn't update all documents"
     convertResult (id, Just rev) = Persisted <$> pure id <*> pure rev <*> lookupThrowing id valById
-    lookupThrowing id cache = case lookup id cache of
-      Just val -> return val
-      Nothing -> throwIO $ ResponseException $ "Unexpected id: " ++ show id
 
 update :: (Data a) => Persisted a -> Action a (Persisted a)
 update = return . singleton >=> updateMultiple >=> 
   maybe (throwIO $ OperationException "Failed to update entity") return . listToMaybe
+    
+lookupThrowing id cache = case lookup id cache of
+  Just val -> return val
+  Nothing -> throwIO $ ResponseException $ "Unexpected id: " ++ show id
