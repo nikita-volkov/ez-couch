@@ -19,7 +19,7 @@ data Action a b = Action { run :: ConnectionSettings -> Manager -> IO b }
   deriving (Functor)
 instance Monad (Action a) where
   return a = Action $ \_ _ -> return a
-  a >>= b = join $ fmap b a
+  a >>= b = Action $ \c m -> run a c m >>= \a' -> run (b a') c m
 instance Applicative (Action a) where
   (<*>) = ap
   pure = return
