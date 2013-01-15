@@ -1,10 +1,11 @@
-{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
 module EZCouch.Action where
 
 import Prelude ()
 import ClassyPrelude.Conduit hiding (log)
 import Control.Exception (SomeException(..))
 import Control.Monad.Trans.Resource
+import Control.Monad.Base
 import EZCouch.Types
 import Network.HTTP.Types as HTTP
 import Network.HTTP.Conduit as HTTP
@@ -30,6 +31,8 @@ instance MonadUnsafeIO (Action a) where
   unsafeLiftIO = liftIO
 instance MonadResource (Action a) where
   liftResourceT = liftIO . runResourceT
+instance MonadBase IO (Action a) where
+  liftBase = liftIO
 
 -- | A helper for generic functions
 actionEntityType :: Action a b -> a
