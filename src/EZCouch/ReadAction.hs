@@ -10,10 +10,10 @@ import EZCouch.Types
 import qualified EZCouch.Parsing as Parsing
 import qualified EZCouch.Encoding as Encoding
 import qualified Database.CouchDB.Conduit.View.Query as CC
-import qualified Data.Aeson.Types as Aeson
+import Data.Aeson.Types
 
 readAction
-  :: (MonadAction m, Data k, Data a) 
+  :: (MonadAction m, Data a, Data k)
   => Bool
   -> ReadOptions a k
   -> m (ResumableSource m ByteString)

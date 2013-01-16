@@ -31,7 +31,7 @@ action method path qps body
       let req = request settings
       log 0 
         $ "Perfroming a " 
-          ++ (show method :: Text) ++ " at " 
+          ++ show method ++ " at " 
           ++ show (HTTP.path req ++ "?" ++ HTTP.queryString req)
       Response _ _ _ body <- http req manager 
       return body
