@@ -8,6 +8,8 @@ import Util.PrettyPrint
 import qualified Util.Logging as Logging
 import Debug.Trace
 
+log lvl = Logging.log "test" lvl
+
 connection = ConnectionSettings {
   connectionSettingsHost = "mojojojo.cloudant.com",
   connectionSettingsPort = defaultPort,
@@ -25,21 +27,30 @@ generateEntity = do
   return $ A time Nothing
 
 purge = do
+  log 0 "Purging"
   as :: [Persisted A] <- readMultiple readOptions
-  liftIO $ print $ length as 
+  log 1 "Purged " ++ (show $ length $ as)
   deleteMultiple as
-
--- main = getCurrentTime >>= print
-main = run connection $ do
-  purge
---   -- generateEntitiesInDB
-  testConnectionAlive 3
---   -- createOrUpdateView db "De" "Vi" "AAAA" Nothing
---   -- createOrUpdateView db "De" "Vi1" "AAAA" Nothing
 
 testConnectionAlive i = trace (show i) $ if i > 0
   then do
-    entity <- liftIO $ generateEntity
-    create entity
+    entities <- liftIO $ sequence $ replicate 100 generateEntity
+    createMultiple entities
     testConnectionAlive $ i - 1
   else return ()
+
+  
+-- main = getCurrentTime >>= print
+main = run connection $ do
+  liftIO $ Logging.initialize
+  design :: Maybe (Persisted (Design Download)) <- readDesign
+  return design
+--   purge
+-- --   -- generateEntitiesInDB
+--   testConnectionAlive 2000
+--   -- createOrUpdateView db "De" "Vi" "AAAA" Nothing
+--   -- createOrUpdateView db "De" "Vi1" "AAAA" Nothing
+
+
+data Download = Download { downloadA :: Text } deriving (Data, Typeable)
+    

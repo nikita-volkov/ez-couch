@@ -4,20 +4,41 @@
 module EZCouch.Design where
 
 import Prelude ()
-import BasicPrelude
-import Data.Text.Encoding
+import ClassyPrelude
 import Data.Generics
 
-import qualified Database.CouchDB.Conduit.Design as Conduit
+import EZCouch.ReadAction
+import EZCouch.Action
+import EZCouch.BulkOperationsAction
 import EZCouch.Types
+import EZCouch.Encoding
+import EZCouch.Parsing
 
-createOrUpdateView db design viewName viewMap viewReduce = do
-  Conduit.couchPutView dbB designB viewNameB viewMapB viewReduceB
+
+data Design a 
+  = Design {
+      views :: Map Text View  
+    }
+  deriving (Show, Eq, Data, Typeable)
+
+data View 
+  = View {
+      map :: ByteString,
+      reduce :: Maybe ByteString
+    }
+  deriving (Show, Eq, Data, Typeable)
+
+readDesign :: (MonadAction m, Data a) => m (Maybe (Persisted (Design a)))
+readDesign = result
   where
-    dbB = encodeUtf8 db
-    designB = encodeUtf8 design
-    viewNameB = encodeUtf8 viewName
-    viewMapB = encodeUtf8 viewMap
-    viewReduceB = encodeUtf8 <$> viewReduce
+    result 
+      = getAction ["_design", designName] [] "" 
+        >>= parseSingleRow errorPersistedParser 
+        >>= return . either (const Nothing) Just
+      where
+        designName = docType $ (undefined :: m (Maybe (Persisted (Design a))) -> a) result
 
+-- readView :: (MonadAction m, Data a) => ViewId a -> m (Either (Text, Text) (Persisted (View a)))
+-- readView viewId = getAction ["_design", viewIdDesign viewId] [] "" >>=
+--   parseSingleRow singleRowSink errorPersistedParser
 
