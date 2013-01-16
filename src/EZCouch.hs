@@ -1,22 +1,8 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-module EZCouch (runWithManager, runCouch, module UpdateRequest, module ReadRequest, module Types, module Design, MonadCouch(..), Path(..), def, CouchConnection(..)) where
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
+module EZCouch (module Types, module ReadAction, module BulkOperationAction, run, runWithManager) where
 
-import Prelude ()
-import BasicPrelude
-
-import Data.Generics
-
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.Resource
-import Database.CouchDB.Conduit as Conduit
-
-import EZCouch.UpdateRequest as UpdateRequest
+import EZCouch.Action
 import EZCouch.Types as Types
-import EZCouch.ReadRequest as ReadRequest
-import EZCouch.Design as Design
-
-runWithManager mgr cx
-  = withCouchConnection mgr cx . runReaderT . runResourceT . lift
-
+import EZCouch.ReadAction as ReadAction
+import EZCouch.BulkOperationAction as BulkOperationAction
+-- import EZCouch.Design as Design

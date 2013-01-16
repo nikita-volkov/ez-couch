@@ -7,10 +7,16 @@ import Prelude ()
 import ClassyPrelude 
 import Data.Generics
 import qualified Data.ByteString.Lazy.Char8 -- export instances for LByteString
-import qualified Data.Aeson.FixedGeneric as Aeson
+import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.FixedGeneric as GAeson
 
 docType :: (Data a) => a -> ByteString
 docType = fromString . showConstr . maybe undefined id . listToMaybe . dataTypeConstrs . dataTypeOf 
 
 keysBody :: (Data a) => a -> LByteString
-keysBody keys = "{\"keys\":" ++ Aeson.encode keys ++ "}"
+keysBody keys = "{\"keys\":" ++ GAeson.encode keys ++ "}"
+
+insertPairs pairs (Aeson.Object m) 
+  = Aeson.Object $ fold (flip . uncurry $ insert) m pairs
+
+

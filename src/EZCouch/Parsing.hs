@@ -4,9 +4,9 @@ module EZCouch.Parsing where
 
 import Prelude ()
 import ClassyPrelude.Conduit
-import Control.Exception.Lifted 
 import Data.Text.Lazy (toStrict)
-import Data.Generics
+import Data.Generics (Typeable, Data)
+import Control.Monad.Trans.Resource (liftResourceT)
 import EZCouch.Types
 import qualified Data.Aeson as Aeson 
 import qualified Data.Aeson.FixedGeneric as GAeson 
@@ -18,11 +18,17 @@ import qualified Data.Vector.Generic as GVector
 import qualified Data.Vector.Fusion.Stream as Stream
 
 
+parse rowsSink parser response = liftResourceT $ do
+  rows <- response $$+- rowsSink
+  result <- rows $= map parser $$ consume
+  either (monadThrow . ParsingException) return $ sequence result
+
+
 oneRowSink :: MonadResource m => Sink ByteString m Aeson.Value
 oneRowSink = Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON")
 
-readRowsSink :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
-readRowsSink = do 
+multipleRowsSink1 :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
+multipleRowsSink1 = do 
   o <- Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON")
   rows <- case o of
     Aeson.Object raw' -> case lookup "rows" raw' of
@@ -31,8 +37,8 @@ readRowsSink = do
     _ -> monadThrow $ ParsingException "Not an Object"
   return $ vectorSource rows
 
-updateRowsSink :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
-updateRowsSink = do 
+multipleRowsSink2 :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
+multipleRowsSink2 = do 
   Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON") >>= \r -> case r of
     Aeson.Array rows -> return $ vectorSource rows 
     _ -> monadThrow $ ParsingException "Not an Array"
@@ -45,6 +51,18 @@ vectorSource vec = Conduit.sourceState (GVector.stream vec) f
 
 
 type RowParser a = Aeson.Value -> Either Text a
+
+idRevRowParser :: RowParser (ByteString, Maybe ByteString)
+idRevRowParser o @ (Aeson.Object m) 
+  | Just rev <- lookup "rev" m,
+    Just id <- lookup "id" m
+    = (,) <$> fromJSON id <*> (Just <$> fromJSON rev)
+  | Just code <- lookup "error" m,
+    Just reason <- lookup "reason" m,
+    Just id <- lookup "id" m
+    = (,) <$> fromJSON id <*> pure Nothing
+  | otherwise
+    = Left $ unexpectedRowValueText o
 
 keyExistsRowParser :: (Data k) => RowParser (k, Bool)
 keyExistsRowParser o @ (Aeson.Object m) 

@@ -30,6 +30,8 @@ data ReadOptions k
       readOptionsSkip :: Int
     }
   deriving (Show, Data, Typeable, Eq, Ord)
+  
+readOptions :: ReadOptions ByteString
 readOptions = ReadOptions Nothing Nothing False Nothing 0
 
 
@@ -41,4 +43,4 @@ data ConnectionSettings
       connectionSettingsDatabase :: ByteString
     }
 
-defaultPort = 5984
+defaultPort = 5984 :: Int

@@ -1,10 +1,11 @@
-{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
 module EZCouch.Action where
 
 import Prelude ()
 import ClassyPrelude.Conduit hiding (log)
-import Control.Exception
+import Control.Exception (SomeException(..))
 import Control.Monad.Trans.Resource
+import Control.Monad.Base
 import EZCouch.Types
 import Network.HTTP.Types as HTTP
 import Network.HTTP.Conduit as HTTP
@@ -14,14 +15,38 @@ import qualified Util.Logging as Logging
 
 log lvl = Logging.log "action" lvl
 
-data Action a b = Action { run :: ConnectionSettings -> Manager -> IO b }
-  deriving (Functor)
+runWithManager manager settings action 
+  = unwrap action settings manager
+
+-- run settings action = HTTP.withManager $ 
+--   \manager -> liftIO $ unwrap action settings manager
+
+run settings action = do
+  manager <- HTTP.newManager HTTP.def
+  result <- unwrap action settings manager
+  -- HTTP.closeManager manager
+  return result
+
+
+newtype Action a b = Action { unwrap :: ConnectionSettings -> Manager -> IO b }
+instance Functor (Action a) where
+  fmap f action = Action $ \s m -> fmap f $ unwrap action s m
 instance Monad (Action a) where
   return a = Action $ \_ _ -> return a
-  a >>= b = join $ fmap b a
+  a >>= b = Action $ \c m -> unwrap a c m >>= \a' -> unwrap (b a') c m
 instance Applicative (Action a) where
   (<*>) = ap
   pure = return
+instance MonadIO (Action a) where
+  liftIO io = Action $ \_ _ -> io
+instance MonadThrow (Action a) where
+  monadThrow = liftIO . throwIO
+instance MonadUnsafeIO (Action a) where 
+  unsafeLiftIO = liftIO
+instance MonadResource (Action a) where
+  liftResourceT = liftIO . runResourceT
+instance MonadBase IO (Action a) where
+  liftBase = liftIO
 
 -- | A helper for generic functions
 actionEntityType :: Action a b -> a
