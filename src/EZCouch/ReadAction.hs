@@ -53,8 +53,10 @@ readExists options
   = readAction False options
     >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.keyExistsRowParser
     
--- -- -- readIds :: ReadOptions -> Action [ByteString]
--- -- -- TODO: Should return ids for non-view queries
+readIds :: (MonadAction m, Data a) => ReadOptions a ByteString -> m [ByteString]
+readIds = readKeys
+
+-- TODO: Test on returning ids for non-view queries
 readKeys :: (MonadAction m, Data a, Data k) => ReadOptions a k -> m [k]
 readKeys = fmap (map fst . filter snd) . readExists
 
