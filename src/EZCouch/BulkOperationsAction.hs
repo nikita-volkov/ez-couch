@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
-module EZCouch.BulkOperationAction where
+module EZCouch.BulkOperationsAction where
 
 import Prelude ()
 import ClassyPrelude.Conduit hiding (log)
