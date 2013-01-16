@@ -1,11 +1,10 @@
-{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor, GeneralizedNewtypeDeriving, FlexibleInstances #-}
 module EZCouch.Action where
 
 import Prelude ()
 import ClassyPrelude.Conduit hiding (log)
 import Control.Exception (SomeException(..))
-import Control.Monad.Trans.Resource
-import Control.Monad.Base
+import Control.Monad.Reader
 import EZCouch.Types
 import Network.HTTP.Types as HTTP
 import Network.HTTP.Conduit as HTTP
@@ -15,62 +14,26 @@ import qualified Util.Logging as Logging
 
 log lvl = Logging.log "action" lvl
 
-runWithManager manager settings action 
-  = unwrap action settings manager
+class (MonadBaseControl IO m, MonadResource m, MonadReader (ConnectionSettings, Manager) m) => MonadAction m where
 
--- run settings action = HTTP.withManager $ 
---   \manager -> liftIO $ unwrap action settings manager
+instance (MonadResource m, MonadBaseControl IO m) => MonadAction (ReaderT (ConnectionSettings, Manager) m) 
 
-run settings action = do
-  manager <- HTTP.newManager HTTP.def
-  result <- unwrap action settings manager
-  -- HTTP.closeManager manager
-  return result
-
-
-newtype Action a b = Action { unwrap :: ConnectionSettings -> Manager -> IO b }
-instance Functor (Action a) where
-  fmap f action = Action $ \s m -> fmap f $ unwrap action s m
-instance Monad (Action a) where
-  return a = Action $ \_ _ -> return a
-  a >>= b = Action $ \c m -> unwrap a c m >>= \a' -> unwrap (b a') c m
-instance Applicative (Action a) where
-  (<*>) = ap
-  pure = return
-instance MonadIO (Action a) where
-  liftIO io = Action $ \_ _ -> io
-instance MonadThrow (Action a) where
-  monadThrow = liftIO . throwIO
-instance MonadUnsafeIO (Action a) where 
-  unsafeLiftIO = liftIO
-instance MonadResource (Action a) where
-  liftResourceT = liftIO . runResourceT
-instance MonadBase IO (Action a) where
-  liftBase = liftIO
-
--- | A helper for generic functions
-actionEntityType :: Action a b -> a
-actionEntityType = undefined
-
-action 
-  :: Method
-  -- ^ Request method
-  -> [ByteString]
-  -- ^ Request path segments
+action
+  :: (MonadAction m) 
+  => Method
+  -> [CC.Path]
   -> [CC.CouchQP]
-  -- ^ Request arguments
   -> LByteString
-  -- ^ Request body
-  -> Action a (ResumableSource (ResourceT IO) ByteString)
-  -- ^ An action over entity 'a'
+  -> m (ResumableSource m ByteString)
 action method path qps body 
-  = Action $ \settings manager -> do
+  = do
+      (settings, manager) <- ask
       let req = request settings
       log 0 
         $ "Perfroming a " 
           ++ (show method :: Text) ++ " at " 
           ++ show (HTTP.path req ++ "?" ++ HTTP.queryString req)
-      Response _ _ _ body <- runResourceT $ http req manager 
+      Response _ _ _ body <- http req manager 
       return body
   where
     headers = [("Content-Type", "application/json")]
@@ -96,6 +59,12 @@ action method path qps body
       | elem code [200, 201, 202, 304] = Nothing
       | otherwise = Just $ SomeException $ StatusCodeException status headers
 
-putAction = action methodPut
-postAction = action methodPost
-getAction = action methodGet
+putAction = action HTTP.methodPut
+postAction = action HTTP.methodPost
+getAction = action HTTP.methodGet
+
+
+runWithManager manager settings action = runReaderT action (settings, manager)
+run settings action = HTTP.withManager $ 
+  \manager -> runWithManager manager settings action
+

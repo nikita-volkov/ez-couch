@@ -19,9 +19,9 @@ data BulkOperation a
   | Update ByteString ByteString a
   | Delete ByteString ByteString
 
-bulkOperationsAction :: (Data a) 
+bulkOperationsAction :: (MonadAction m, Data a) 
   => [BulkOperation a] 
-  -> Action a [(ByteString, Maybe ByteString)]
+  -> m [(ByteString, Maybe ByteString)]
   -- ^ Maybe rev by id. Nothing on failure.
 bulkOperationsAction ops = do
   response <- postAction path qps body
@@ -40,7 +40,7 @@ operationJSON (Update id rev a)
 operationJSON (Delete id rev)
   = Aeson.object [("_id", Aeson.toJSON id), ("_rev", Aeson.toJSON rev), ("_deleted", Aeson.Bool True)] 
 
-deleteMultiple :: (Data a) => [Persisted a] -> Action a ()
+deleteMultiple :: (MonadAction m, Data a) => [Persisted a] -> m ()
 deleteMultiple vals = do
   results <- bulkOperationsAction $ map toOperation vals
   let failedIds = map fst $ filter (isNothing . snd) results
@@ -48,13 +48,15 @@ deleteMultiple vals = do
     then return ()
     else throwIO $ OperationException $ "Couldn't delete entities by following ids: " ++ show failedIds
   where
+    toOperation :: Persisted a -> BulkOperation a
     toOperation (Persisted id rev val) = Delete id rev
 
+delete :: (MonadAction m, Data a) => Persisted a -> m ()
 delete = deleteMultiple . singleton
 
-createMultipleWithIds :: (Data a) 
+createMultipleWithIds :: (MonadAction m, Data a) 
   => [(ByteString, a)] 
-  -> Action a [Either (ByteString, a) (Persisted a)]
+  -> m [Either (ByteString, a) (Persisted a)]
 createMultipleWithIds idsToVals 
   = bulkOperationsAction [Create id val | (id, val) <- idsToVals]
       >>= mapM convertResult
@@ -65,7 +67,7 @@ createMultipleWithIds idsToVals
     convertResult (id, Just rev) = fmap Right $ 
       Persisted <$> pure id <*> pure rev <*> lookupThrowing id valById
 
-createMultiple :: (Data a) => [a] -> Action a [Persisted a]
+createMultiple :: (MonadAction m, Data a) => [a] -> m [Persisted a]
 createMultiple = retry 10 
   where
     generateIdToVal val = do
@@ -84,11 +86,11 @@ createMultiple = retry 10
         else
           throwIO $ OperationException $ "Failed to generate unique ids"
 
-create :: (Data a) => a -> Action a (Persisted a)
+create :: (MonadAction m, Data a) => a -> m (Persisted a)
 create = return . singleton >=> createMultiple >=> 
   maybe (throwIO $ OperationException "Failed to create entity") return . listToMaybe
 
-updateMultiple :: (Data a) => [Persisted a] -> Action a [Persisted a]
+updateMultiple :: (MonadAction m, Data a) => [Persisted a] -> m [Persisted a]
 updateMultiple pVals
   = bulkOperationsAction [Update id rev val | Persisted id rev val <- pVals]
       >>= mapM convertResult
@@ -97,7 +99,7 @@ updateMultiple pVals
     convertResult (id, Nothing) = throwIO $ OperationException $ "Couldn't update all documents"
     convertResult (id, Just rev) = Persisted <$> pure id <*> pure rev <*> lookupThrowing id valById
 
-update :: (Data a) => Persisted a -> Action a (Persisted a)
+update :: (MonadAction m, Data a) => Persisted a -> m (Persisted a)
 update = return . singleton >=> updateMultiple >=> 
   maybe (throwIO $ OperationException "Failed to update entity") return . listToMaybe
     

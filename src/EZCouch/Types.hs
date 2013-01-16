@@ -21,7 +21,7 @@ data EZCouchException
 instance Exception EZCouchException
 
 
-data ReadOptions k
+data ReadOptions a k
   = ReadOptions {
       readOptionsKeys :: Maybe [k],
       readOptionsView :: Maybe ByteString,
@@ -31,7 +31,7 @@ data ReadOptions k
     }
   deriving (Show, Data, Typeable, Eq, Ord)
   
-readOptions :: ReadOptions ByteString
+readOptions :: ReadOptions a ByteString
 readOptions = ReadOptions Nothing Nothing False Nothing 0
 
 

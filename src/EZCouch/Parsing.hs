@@ -18,7 +18,7 @@ import qualified Data.Vector.Generic as GVector
 import qualified Data.Vector.Fusion.Stream as Stream
 
 
-parse rowsSink parser response = liftResourceT $ do
+parse rowsSink parser response = do
   rows <- response $$+- rowsSink
   result <- rows $= map parser $$ consume
   either (monadThrow . ParsingException) return $ sequence result

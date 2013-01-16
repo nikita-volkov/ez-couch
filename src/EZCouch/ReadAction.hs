@@ -19,45 +19,44 @@ trace' a = trace (show a) a
 log lvl = Logging.log "read-action" lvl
 
 readAction
-  :: (Data k, Data a) 
+  :: (MonadAction m, Data k, Data a) 
   => Bool
-  -> ReadOptions k
-  -> Action a (ResumableSource (ResourceT IO) ByteString)
-readAction includeDocs (ReadOptions keys view desc limit skip) = result
+  -> ReadOptions a k
+  -> m (ResumableSource m ByteString)
+readAction includeDocs ro@(ReadOptions keys view desc limit skip) = case keys of
+  Nothing -> getAction path (docTypeQPs ++ includeDocsQPs ++ optionsQPs) ""
+  Just keys' -> postAction path (includeDocsQPs ++ optionsQPs) (Encoding.keysBody keys')
   where
-    result = case keys of
-      Nothing -> getAction path (docTypeQPs ++ includeDocsQPs ++ optionsQPs) ""
-      Just keys' -> postAction path (includeDocsQPs ++ optionsQPs) (Encoding.keysBody keys')
+    docType = Encoding.docType $ (undefined :: ReadOptions a k -> a) ro
+    optionsQPs = catMaybes [descQP, limitQP, skipQP]
       where
-        docType = Encoding.docType $ actionEntityType result
-        optionsQPs = catMaybes [descQP, limitQP, skipQP]
-          where
-            descQP = if desc then Just CC.QPDescending else Nothing
-            limitQP = CC.QPLimit <$> limit
-            skipQP = if skip /= 0 then Just $ CC.QPSkip skip else Nothing
-        includeDocsQPs = if includeDocs then [CC.QPIncludeDocs] else []
-        docTypeQPs = [CC.QPStartKey (docType ++ "-"), CC.QPEndKey (docType ++ "_")]
-        path 
-          | Just view' <- view = ["_design", docType, "_view", view']
-          | otherwise = ["_all_docs"]
+        descQP = if desc then Just CC.QPDescending else Nothing
+        limitQP = CC.QPLimit <$> limit
+        skipQP = if skip /= 0 then Just $ CC.QPSkip skip else Nothing
+    includeDocsQPs = if includeDocs then [CC.QPIncludeDocs] else []
+    docTypeQPs = [CC.QPStartKey (docType ++ "-"), CC.QPEndKey (docType ++ "_")]
+    path 
+      | Just view' <- view = ["_design", docType, "_view", view']
+      | otherwise = ["_all_docs"]
+    descQP = if desc then Just CC.QPDescending else Nothing
+    limitQP = CC.QPLimit <$> limit
+    skipQP = if skip /= 0 then Just $ CC.QPSkip skip else Nothing
 
 
-readMultiple :: (Data a, Data k) => ReadOptions k -> Action a [Persisted a]
+readMultiple :: (MonadAction m, Data a, Data k) => ReadOptions a k -> m [Persisted a]
 readMultiple options 
   = readAction True options 
     >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.persistedRowParser
 
-readExists :: (Data a, Data k) => ReadOptions k -> Action a [(k, Bool)]
+readExists :: (MonadAction m, Data a, Data k) => ReadOptions a k -> m [(k, Bool)]
 readExists options
   = readAction False options
     >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.keyExistsRowParser
     
--- readIds :: ReadOptions -> Action [ByteString]
+-- -- -- readIds :: ReadOptions -> Action [ByteString]
+-- -- -- TODO: Should return ids for non-view queries
+readKeys :: (MonadAction m, Data a, Data k) => ReadOptions a k -> m [k]
+readKeys = fmap (map fst . filter snd) . readExists
 
--- TODO: Should return ids for non-view queries
-readKeys :: (Data a, Data k) => ReadOptions k -> Action a [k]
-readKeys = fmap (mapMaybe f) . readExists
-  where f (k, b) = if b then Just k else Nothing
-
-readCount :: (Data a, Data k) => ReadOptions k -> Action a Int
+readCount :: (MonadAction m, Data a, Data k) => ReadOptions a k -> m Int
 readCount = fmap length . readKeys
