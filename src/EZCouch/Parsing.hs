@@ -23,9 +23,12 @@ parse rowsSink parser response = do
   result <- rows $= map parser $$ consume
   either (monadThrow . ParsingException) return $ sequence result
 
+parseSingleRow parser response = do
+  row <- response $$+- singleRowSink
+  either (monadThrow . ParsingException) return $ parser row
 
-oneRowSink :: MonadResource m => Sink ByteString m Aeson.Value
-oneRowSink = Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON")
+singleRowSink :: MonadResource m => Sink ByteString m Aeson.Value
+singleRowSink = Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON")
 
 multipleRowsSink1 :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
 multipleRowsSink1 = do 
@@ -89,6 +92,16 @@ persistedRowParser o @ (Aeson.Object m)
     Aeson.Object docM <- doc,
     Just rev <- lookup "_rev" docM
     = Persisted <$> fromJSON id <*> fromJSON rev <*> fromJSON doc
+  | otherwise
+    = Left $ unexpectedRowValueText o
+
+errorPersistedParser :: (Data a) => RowParser (Either (Text, Text) (Persisted a))
+errorPersistedParser o @ (Aeson.Object m) 
+  | Just id <- lookup "_id" m,
+    Just rev <- lookup "_rev" m
+    = fmap Right $ Persisted <$> fromJSON id <*> fromJSON rev <*> fromJSON o
+  | Just error <- lookup "error" m, Just reason <- lookup "reason" m
+    = fmap Left $ (,) <$> fromJSON error <*> fromJSON reason 
   | otherwise
     = Left $ unexpectedRowValueText o
 
