@@ -10,10 +10,6 @@ library
   ghc-options:      -O2 -threaded -with-rtsopts=-N
   extensions:       PatternGuards
   exposed-modules:  EZCouch
-                    EZCouch.Design
-                    EZCouch.ReadRequest
-                    EZCouch.Types
-                    EZCouch.UpdateRequest
   other-modules:    Control.Retry
                     Data.Aeson.FixedGeneric
                     Data.Aeson.Functions
@@ -21,11 +17,14 @@ library
                     Data.Aeson.Parser.Internal
                     Data.Aeson.Types.Class
                     Data.Aeson.Types.Internal
-                    EZCouch.BulkPostRequest
+                    EZCouch.Action
+                    EZCouch.BulkOperationsAction
+                    EZCouch.Design
                     EZCouch.Encoding
                     EZCouch.Ids
                     EZCouch.Parsing
-                    EZCouch.Request
+                    EZCouch.ReadAction
+                    EZCouch.Types
                     Util.Logging
                     Util.PrettyPrint
   build-depends:    base == 4.5.*,
