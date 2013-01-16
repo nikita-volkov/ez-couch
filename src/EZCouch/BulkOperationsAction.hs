@@ -50,7 +50,7 @@ deleteMultiple vals = do
   where
     toOperation (Persisted id rev val) = Delete id rev
 
-delete = deleteMultiple . (: [])
+delete = deleteMultiple . singleton
 
 createMultipleWithIds :: (Data a) 
   => [(ByteString, a)] 
