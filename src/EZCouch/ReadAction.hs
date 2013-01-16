@@ -11,12 +11,6 @@ import qualified EZCouch.Parsing as Parsing
 import qualified EZCouch.Encoding as Encoding
 import qualified Database.CouchDB.Conduit.View.Query as CC
 import qualified Data.Aeson.Types as Aeson
-import qualified Util.Logging as Logging
-
-import Debug.Trace
-
-trace' a = trace (show a) a
-log lvl = Logging.log "read-action" lvl
 
 readAction
   :: (MonadAction m, Data k, Data a) 
