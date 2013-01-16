@@ -23,8 +23,8 @@ data Design a
 
 data View 
   = View {
-      map :: ByteString,
-      reduce :: Maybe ByteString
+      map :: Text,
+      reduce :: Maybe Text
     }
   deriving (Show, Eq, Data, Typeable)
 
