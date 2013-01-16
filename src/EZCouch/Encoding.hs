@@ -11,7 +11,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.FixedGeneric as GAeson
 
 docType :: (Data a) => a -> ByteString
-docType = fromString . showConstr . maybe undefined id . listToMaybe . dataTypeConstrs . dataTypeOf 
+docType = fromString . showConstr . fromMaybe undefined . listToMaybe . dataTypeConstrs . dataTypeOf 
 
 keysBody :: (Data a) => a -> LByteString
 keysBody keys = "{\"keys\":" ++ GAeson.encode keys ++ "}"
