@@ -30,7 +30,7 @@ purge = do
   deleteMultiple as
 
 -- main = getCurrentTime >>= print
-main = run' connection $ do
+main = run connection $ do
   purge
 --   -- generateEntitiesInDB
   testConnectionAlive 3

@@ -15,12 +15,25 @@ import qualified Util.Logging as Logging
 
 log lvl = Logging.log "action" lvl
 
-data Action a b = Action { run :: ConnectionSettings -> Manager -> IO b }
+runWithManager manager settings action 
+  = unwrap action settings manager
+
+-- run settings action = HTTP.withManager $ 
+--   \manager -> liftIO $ unwrap action settings manager
+
+run settings action = do
+  manager <- HTTP.newManager HTTP.def
+  result <- unwrap action settings manager
+  -- HTTP.closeManager manager
+  return result
+
+
+newtype Action a b = Action { unwrap :: ConnectionSettings -> Manager -> IO b }
 instance Functor (Action a) where
-  fmap f action = Action $ \s m -> fmap f $ run action s m
+  fmap f action = Action $ \s m -> fmap f $ unwrap action s m
 instance Monad (Action a) where
   return a = Action $ \_ _ -> return a
-  a >>= b = Action $ \c m -> run a c m >>= \a' -> run (b a') c m
+  a >>= b = Action $ \c m -> unwrap a c m >>= \a' -> unwrap (b a') c m
 instance Applicative (Action a) where
   (<*>) = ap
   pure = return

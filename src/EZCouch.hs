@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
-module EZCouch (module Types, module ReadAction, module BulkOperationAction, run, run') where
+module EZCouch (module Types, module ReadAction, module BulkOperationAction, run, runWithManager) where
 
 import Prelude ()
 import BasicPrelude
@@ -17,12 +17,5 @@ import EZCouch.BulkOperationAction as BulkOperationAction
 
 import qualified Network.HTTP.Conduit as HTTP
 
--- run' settings action = HTTP.withManager $ 
---   \manager -> liftIO $ run action settings manager
 
-run' settings action = do
-  manager <- HTTP.newManager HTTP.def
-  result <- run action settings manager
-  -- HTTP.closeManager manager
-  return result
 
