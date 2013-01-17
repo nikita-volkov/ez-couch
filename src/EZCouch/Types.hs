@@ -3,11 +3,9 @@
 module EZCouch.Types where
 
 import Prelude ()
-import BasicPrelude 
+import ClassyPrelude 
 
 import Data.Generics
-import Database.CouchDB.Conduit 
-
 
 data Persisted a = Persisted { persistedId :: ByteString, persistedRev :: ByteString, persistedValue :: a }
   deriving (Show, Data, Typeable, Eq, Ord)
