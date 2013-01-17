@@ -8,8 +8,8 @@ import Control.Monad.Reader
 import EZCouch.Types
 import Network.HTTP.Types as HTTP
 import Network.HTTP.Conduit as HTTP
-import qualified Database.CouchDB.Conduit as CC
 import qualified Database.CouchDB.Conduit.View.Query as CC
+import qualified Blaze.ByteString.Builder as Blaze
 import qualified Util.Logging as Logging
 
 log lvl = Logging.log "action" lvl
@@ -21,7 +21,7 @@ instance (MonadResource m, MonadBaseControl IO m) => MonadAction (ReaderT (Conne
 action
   :: (MonadAction m) 
   => Method
-  -> [CC.Path]
+  -> [ByteString]
   -> [CC.CouchQP]
   -> LByteString
   -> m (ResumableSource m ByteString)
@@ -44,7 +44,7 @@ action method path qps body
           host = host,
           requestHeaders = headers,
           port = port,
-          path = CC.mkPath $ database : path,
+          path = packPath $ database : path,
           queryString = query,
           requestBody = RequestBodyLBS body,
           checkStatus = checkStatus
@@ -68,3 +68,4 @@ runWithManager manager settings action = runReaderT action (settings, manager)
 run settings action = HTTP.withManager $ 
   \manager -> runWithManager manager settings action
 
+packPath = Blaze.toByteString . HTTP.encodePathSegments . map decodeUtf8 . filter (/="")
