@@ -66,6 +66,14 @@ createMultipleWithIds idsToVals
     convertResult (id, Just rev) = fmap Right $ 
       Persisted <$> pure id <*> pure rev <*> lookupThrowing id valById
 
+createWithId :: (MonadAction m, Doc a)
+  => ByteString
+  -> a
+  -> m (Persisted a)
+createWithId id val = createMultipleWithIds [(id, val)] 
+  >>= return . join . fmap (either (const Nothing) Just) . listToMaybe 
+  >>= maybe (throwIO $ OperationException "Failed to create entity") return
+
 createMultiple :: (MonadAction m, Doc a) => [a] -> m [Persisted a]
 createMultiple = retry 10 
   where
