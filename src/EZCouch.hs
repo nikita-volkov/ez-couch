@@ -6,7 +6,7 @@ module EZCouch (
   runWithManager,
   -- ** CRUD Monadic Functions for Working with Records
   -- | All monadic functions are split into `CRUD` categories. The functions with a 'Multiple' suffix should be used for performing multiple operations at once.
-  
+
   -- ** Creating 
   create,
   createMultiple,
@@ -44,9 +44,9 @@ module EZCouch (
 ) where
 
 import EZCouch.Action
-import EZCouch.Types as Types
-import EZCouch.ReadAction as ReadAction
-import EZCouch.BulkOperationsAction as BulkOperationsAction
-import EZCouch.Design as Design
-import EZCouch.Doc as Design
-import Data.Aeson as Aeson
+import EZCouch.Types
+import EZCouch.ReadAction
+import EZCouch.BulkOperationsAction
+import EZCouch.Design
+import EZCouch.Doc
+import Data.Aeson

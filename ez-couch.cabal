@@ -11,6 +11,7 @@ library
   extensions:       PatternGuards
   exposed-modules:  EZCouch
   other-modules:    Database.CouchDB.Conduit.View.Query
+                    EZCouch.Doc
                     EZCouch.Action
                     EZCouch.BulkOperationsAction
                     EZCouch.Design
