@@ -4,22 +4,21 @@ module EZCouch.BulkOperationsAction where
 import Prelude ()
 import ClassyPrelude.Conduit hiding (log)
 import Control.Monad.Trans.Resource
-import Data.Generics
 import EZCouch.Ids 
 import EZCouch.Action
 import EZCouch.Types
+import EZCouch.Doc
 import qualified EZCouch.Parsing as Parsing
 import qualified EZCouch.Encoding as Encoding
 import qualified Database.CouchDB.Conduit.View.Query as CC
-import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.FixedGeneric as GAeson
+import Data.Aeson as Aeson
 
 data BulkOperation a
   = Create ByteString a
   | Update ByteString ByteString a
   | Delete ByteString ByteString
 
-bulkOperationsAction :: (MonadAction m, Data a) 
+bulkOperationsAction :: (MonadAction m, Doc a) 
   => [BulkOperation a] 
   -> m [(ByteString, Maybe ByteString)]
   -- ^ Maybe rev by id. Nothing on failure.
@@ -34,13 +33,13 @@ bulkOperationsAction ops = do
 bulkOperationsBody ops = Aeson.encode $ Aeson.object [("docs", Aeson.Array $ fromList $ map operationJSON ops)]
 
 operationJSON (Create id a)
-  = Encoding.insertPairs [("_id", Aeson.toJSON id)] $ GAeson.toJSON a
+  = Encoding.insertPairs [("_id", toJSON id)] $ toJSON a
 operationJSON (Update id rev a)
-  = Encoding.insertPairs [("_id", Aeson.toJSON id), ("_rev", Aeson.toJSON rev)] $ GAeson.toJSON a
+  = Encoding.insertPairs [("_id", toJSON id), ("_rev", toJSON rev)] $ toJSON a
 operationJSON (Delete id rev)
-  = Aeson.object [("_id", Aeson.toJSON id), ("_rev", Aeson.toJSON rev), ("_deleted", Aeson.Bool True)] 
+  = Aeson.object [("_id", toJSON id), ("_rev", toJSON rev), ("_deleted", Aeson.Bool True)] 
 
-deleteMultiple :: (MonadAction m, Data a) => [Persisted a] -> m ()
+deleteMultiple :: (MonadAction m, Doc a) => [Persisted a] -> m ()
 deleteMultiple vals = do
   results <- bulkOperationsAction $ map toOperation vals
   let failedIds = map fst $ filter (isNothing . snd) results
@@ -51,10 +50,10 @@ deleteMultiple vals = do
     toOperation :: Persisted a -> BulkOperation a
     toOperation (Persisted id rev val) = Delete id rev
 
-delete :: (MonadAction m, Data a) => Persisted a -> m ()
+delete :: (MonadAction m, Doc a) => Persisted a -> m ()
 delete = deleteMultiple . singleton
 
-createMultipleWithIds :: (MonadAction m, Data a) 
+createMultipleWithIds :: (MonadAction m, Doc a) 
   => [(ByteString, a)] 
   -> m [Either (ByteString, a) (Persisted a)]
 createMultipleWithIds idsToVals 
@@ -67,7 +66,7 @@ createMultipleWithIds idsToVals
     convertResult (id, Just rev) = fmap Right $ 
       Persisted <$> pure id <*> pure rev <*> lookupThrowing id valById
 
-createWithId :: (MonadAction m, Data a)
+createWithId :: (MonadAction m, Doc a)
   => ByteString
   -> a
   -> m (Persisted a)
@@ -75,11 +74,11 @@ createWithId id val = createMultipleWithIds [(id, val)]
   >>= return . join . fmap (either (const Nothing) Just) . listToMaybe 
   >>= maybe (throwIO $ OperationException "Failed to create entity") return
 
-createMultiple :: (MonadAction m, Data a) => [a] -> m [Persisted a]
+createMultiple :: (MonadAction m, Doc a) => [a] -> m [Persisted a]
 createMultiple = retry 10 
   where
     generateIdToVal val = do
-      id <- fmap ((Encoding.docType val ++ "-") ++) $ fmap fromString generateId
+      id <- fmap ((docType val ++ "-") ++) $ fmap fromString generateId
       return (id, val)
     retry attempts vals = do    
       idsToVals <- liftIO $ mapM generateIdToVal vals
@@ -94,11 +93,11 @@ createMultiple = retry 10
         else
           throwIO $ OperationException $ "Failed to generate unique ids"
 
-create :: (MonadAction m, Data a) => a -> m (Persisted a)
+create :: (MonadAction m, Doc a) => a -> m (Persisted a)
 create = return . singleton >=> createMultiple >=> 
   maybe (throwIO $ OperationException "Failed to create entity") return . listToMaybe
 
-updateMultiple :: (MonadAction m, Data a) => [Persisted a] -> m [Persisted a]
+updateMultiple :: (MonadAction m, Doc a) => [Persisted a] -> m [Persisted a]
 updateMultiple pVals
   = bulkOperationsAction [Update id rev val | Persisted id rev val <- pVals]
       >>= mapM convertResult
@@ -107,7 +106,7 @@ updateMultiple pVals
     convertResult (id, Nothing) = throwIO $ OperationException $ "Couldn't update all documents"
     convertResult (id, Just rev) = Persisted <$> pure id <*> pure rev <*> lookupThrowing id valById
 
-update :: (MonadAction m, Data a) => Persisted a -> m (Persisted a)
+update :: (MonadAction m, Doc a) => Persisted a -> m (Persisted a)
 update = return . singleton >=> updateMultiple >=> 
   maybe (throwIO $ OperationException "Failed to update entity") return . listToMaybe
     

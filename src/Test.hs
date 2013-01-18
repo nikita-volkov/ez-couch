@@ -1,7 +1,9 @@
-{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor, DeriveGeneric #-}
 import Prelude ()
 import ClassyPrelude hiding (log)
 import Data.Time
+import Data.Aeson
+import GHC.Generics
 import Control.Concurrent
 import EZCouch
 import Util.PrettyPrint
@@ -18,7 +20,10 @@ connection = ConnectionSettings {
 }
 
 data A = A { a :: UTCTime, b :: Maybe Double }
-  deriving (Data, Typeable, Show)
+  deriving (Data, Typeable, Show, Generic)
+instance ToJSON A
+instance FromJSON A
+instance Doc A
 
 generateEntitiesInDB = liftIO generateEntities >>= createMultiple
 generateEntities = sequence $ replicate 10 generateEntity
@@ -45,5 +50,5 @@ main = run connection $ do
   createOrUpdateDesign design
   where 
     design :: Design A
-      = Design $ fromList [("view1", fromList [("map", "fdjdsfklsfj")])]
+      = Design $ fromList [("view1", View "lsdkfjs" Nothing)]
     

@@ -5,10 +5,8 @@ module EZCouch.Parsing where
 import Prelude ()
 import ClassyPrelude.Conduit
 import Data.Text.Lazy (toStrict)
-import Data.Generics (Typeable, Data)
 import EZCouch.Types
-import qualified Data.Aeson as Aeson 
-import qualified Data.Aeson.FixedGeneric as GAeson 
+import Data.Aeson as Aeson 
 import qualified Data.Conduit.Util as Conduit
 import qualified Data.Conduit.Attoparsec as Atto
 import qualified Data.Attoparsec as Atto
@@ -58,53 +56,53 @@ idRevRowParser :: RowParser (ByteString, Maybe ByteString)
 idRevRowParser o @ (Aeson.Object m) 
   | Just rev <- lookup "rev" m,
     Just id <- lookup "id" m
-    = (,) <$> fromJSON id <*> (Just <$> fromJSON rev)
+    = (,) <$> fromJSON' id <*> (Just <$> fromJSON' rev)
   | Just code <- lookup "error" m,
     Just reason <- lookup "reason" m,
     Just id <- lookup "id" m
-    = (,) <$> fromJSON id <*> pure Nothing
+    = (,) <$> fromJSON' id <*> pure Nothing
   | otherwise
     = Left $ unexpectedRowValueText o
 
-keyExistsRowParser :: (Data k) => RowParser (k, Bool)
+keyExistsRowParser :: (FromJSON k) => RowParser (k, Bool)
 keyExistsRowParser o @ (Aeson.Object m) 
   | Just "not_found" <- lookup "error" m,
     Just key <- lookup "key" m
-    = (,) <$> fromJSON key <*> pure False
+    = (,) <$> fromJSON' key <*> pure False
   | Just id <- lookup "id" m,
     Just (Aeson.Object valueM) <- lookup "value" m,
     Just (Aeson.Bool True) <- lookup "deleted" valueM,
     Just key <- lookup "key" m
-    = (,) <$> fromJSON key <*> pure False
+    = (,) <$> fromJSON' key <*> pure False
   | Just id <- lookup "id" m,
     Just _ <- lookup "value" m,
     Just key <- lookup "key" m
-    = (,) <$> fromJSON key <*> pure True
+    = (,) <$> fromJSON' key <*> pure True
   | otherwise
     = Left $ unexpectedRowValueText o
 
-persistedRowParser :: (Data a) => RowParser (Persisted a)
+persistedRowParser :: (FromJSON a) => RowParser (Persisted a)
 persistedRowParser o @ (Aeson.Object m) 
   | Just id <- lookup "id" m,
     Just (Aeson.Object valueM) <- lookup "value" m,
     Just doc <- lookup "doc" m,
     Aeson.Object docM <- doc,
     Just rev <- lookup "_rev" docM
-    = Persisted <$> fromJSON id <*> fromJSON rev <*> fromJSON doc
+    = Persisted <$> fromJSON' id <*> fromJSON' rev <*> fromJSON' doc
   | otherwise
     = Left $ unexpectedRowValueText o
 
-errorPersistedParser :: (Data a) => RowParser (Either (Text, Text) (Persisted a))
+errorPersistedParser :: (FromJSON a) => RowParser (Either (Text, Text) (Persisted a))
 errorPersistedParser o @ (Aeson.Object m) 
   | Just id <- lookup "_id" m,
     Just rev <- lookup "_rev" m
-    = fmap Right $ Persisted <$> fromJSON id <*> fromJSON rev <*> fromJSON o
+    = fmap Right $ Persisted <$> fromJSON' id <*> fromJSON' rev <*> fromJSON' o
   | Just error <- lookup "error" m, Just reason <- lookup "reason" m
-    = fmap Left $ (,) <$> fromJSON error <*> fromJSON reason 
+    = fmap Left $ (,) <$> fromJSON' error <*> fromJSON' reason 
   | otherwise
     = Left $ unexpectedRowValueText o
 
-maybePersistedByKeyRowParser :: (Data a, Data k) => RowParser (k, Maybe (Persisted a))
+maybePersistedByKeyRowParser :: (FromJSON a, FromJSON k) => RowParser (k, Maybe (Persisted a))
 maybePersistedByKeyRowParser o @ (Aeson.Object m) 
   -- deleted
   | Just id <- lookup "id" m,
@@ -112,7 +110,7 @@ maybePersistedByKeyRowParser o @ (Aeson.Object m)
     Just (Aeson.Bool True) <- lookup "deleted" valueM,
     Just rev <- lookup "rev" valueM,
     Just key <- lookup "key" m
-    = (,) <$> fromJSON key <*> pure Nothing
+    = (,) <$> fromJSON' key <*> pure Nothing
   -- found
   | Just id <- lookup "id" m,
     Just (Aeson.Object valueM) <- lookup "value" m,
@@ -120,16 +118,16 @@ maybePersistedByKeyRowParser o @ (Aeson.Object m)
     Aeson.Object docM <- doc,
     Just rev <- lookup "_rev" docM,
     Just key <- lookup "key" m
-    = (,) <$> fromJSON key <*> (Just <$> (Persisted <$> fromJSON id <*> fromJSON rev <*> fromJSON doc))
+    = (,) <$> fromJSON' key <*> (Just <$> (Persisted <$> fromJSON' id <*> fromJSON' rev <*> fromJSON' doc))
   -- not found
   | Just "not_found" <- lookup "error" m,
     Just key <- lookup "key" m
-    = (,) <$> fromJSON key <*> pure Nothing
+    = (,) <$> fromJSON' key <*> pure Nothing
   | otherwise
     = Left $ unexpectedRowValueText o
 
 
-fromJSON v = case GAeson.fromJSON v of
+fromJSON' v = case fromJSON v of
   Aeson.Success z -> Right $ z
   Aeson.Error s -> Left $ fromString $ s
 
