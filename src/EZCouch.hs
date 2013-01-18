@@ -1,22 +1,45 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-module EZCouch (runWithManager, runCouch, module UpdateRequest, module ReadRequest, module Types, module Design, MonadCouch(..), Path(..), def, CouchConnection(..)) where
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
+module EZCouch (
+  -- * Execution Monad
+  MonadAction(..),
+  run,
+  runWithManager,
+  -- * CRUD Monadic Functions
+  -- | All monadic functions are split into `CRUD` categories. The functions with a 'Multiple' suffix should be used for performing multiple operations at once.
+  
+  -- ** Creating Monadic Functions
+  create,
+  createMultiple,
+  createWithId,
+  createMultipleWithIds,
+  -- ** Reading Monadic Functions
+  readMultiple,
+  readExists,
+  readIds,
+  readKeys,
+  readCount,
+  -- ** Updating Monadic Functions
+  update,
+  updateMultiple,
+  -- ** Deleting Monadic Functions
+  delete,
+  deleteMultiple,
+  -- * Working with Design Documents
+  Design(..),
+  createOrUpdateDesign,
+  readDesign,
+  -- * Types
+  Persisted(..),
+  EZCouchException(..),
+  ReadOptions(..),
+  readOptions,
+  ConnectionSettings(..),
+  defaultPort
 
-import Prelude ()
-import BasicPrelude
+) where
 
-import Data.Generics
-
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.Resource
-import Database.CouchDB.Conduit as Conduit
-
-import EZCouch.UpdateRequest as UpdateRequest
+import EZCouch.Action
 import EZCouch.Types as Types
-import EZCouch.ReadRequest as ReadRequest
+import EZCouch.ReadAction as ReadAction
+import EZCouch.BulkOperationsAction as BulkOperationsAction
 import EZCouch.Design as Design
-
-runWithManager mgr cx
-  = withCouchConnection mgr cx . runReaderT . runResourceT . lift
-

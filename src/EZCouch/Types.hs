@@ -3,20 +3,42 @@
 module EZCouch.Types where
 
 import Prelude ()
-import BasicPrelude 
+import ClassyPrelude 
 
 import Data.Generics
-import Database.CouchDB.Conduit 
 
-data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persistedValue :: a }
+data Persisted a = Persisted { persistedId :: ByteString, persistedRev :: ByteString, persistedValue :: a }
+  deriving (Show, Data, Typeable, Eq, Ord)
 
-data HighException 
+
+data EZCouchException 
   = ParsingException Text 
   | OperationException Text 
   | ResponseException Text 
   deriving (Show, Data, Typeable)
-instance Exception HighException
+instance Exception EZCouchException
 
-type DB = Text
-type View = Text
-type DesignAndView = (Text, Text)
+
+data ReadOptions a k
+  = ReadOptions {
+      readOptionsKeys :: Maybe [k],
+      readOptionsView :: Maybe ByteString,
+      readOptionsDescending :: Bool,
+      readOptionsLimit :: Maybe Int,
+      readOptionsSkip :: Int
+    }
+  deriving (Show, Data, Typeable, Eq, Ord)
+  
+readOptions :: ReadOptions a ByteString
+readOptions = ReadOptions Nothing Nothing False Nothing 0
+
+
+data ConnectionSettings 
+  = ConnectionSettings {  
+      connectionSettingsHost :: ByteString,
+      connectionSettingsPort :: Int,
+      connectionSettingsAuth :: Maybe (ByteString, ByteString),
+      connectionSettingsDatabase :: ByteString
+    }
+
+defaultPort = 5984 :: Int

@@ -1,34 +1,49 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE OverloadedStrings, ScopedTypeVariables, NoMonomorphismRestriction #-}
-
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
 import Prelude ()
-import BasicPrelude hiding (log)
+import ClassyPrelude hiding (log)
 import Data.Time
-import System.Random
+import Control.Concurrent
 import EZCouch
 import Util.PrettyPrint
 import qualified Util.Logging as Logging
+import Debug.Trace
 
-connection = def {
-  couchHost = "mojojojo.cloudant.com"
+log lvl = Logging.log "test" lvl
+
+connection = ConnectionSettings {
+  connectionSettingsHost = "mojojojo.cloudant.com",
+  connectionSettingsPort = defaultPort,
+  connectionSettingsAuth = Nothing,
+  connectionSettingsDatabase = "test"
 }
-db = "test"
 
 data A = A { a :: UTCTime, b :: Maybe Double }
   deriving (Data, Typeable, Show)
 
-generateEntitiesInDB = liftIO generateEntities >>= createMultiple db
+generateEntitiesInDB = liftIO generateEntities >>= createMultiple
 generateEntities = sequence $ replicate 10 generateEntity
 generateEntity = do
   time <- getCurrentTime
   return $ A time Nothing
 
-purge 
-  = readAll db readOptions 
-    >>= \(as :: [Persisted A]) -> deleteMultiple db as
+purge = do
+  log 0 "Purging"
+  as :: [Persisted A] <- readMultiple readOptions
+  log 1 "Purged " ++ (show $ length $ as)
+  deleteMultiple as
 
-main = runCouch connection $ do
-  purge
-  generateEntitiesInDB
-  createOrUpdateView db "De" "Vi" "AAAA" Nothing
-  createOrUpdateView db "De" "Vi1" "AAAA" Nothing
+testConnectionAlive i = trace (show i) $ if i > 0
+  then do
+    entities <- liftIO $ sequence $ replicate 100 generateEntity
+    createMultiple entities
+    testConnectionAlive $ i - 1
+  else return ()
+
+  
+main = run connection $ do
+  liftIO $ Logging.initialize
+  createOrUpdateDesign design
+  where 
+    design :: Design A
+      = Design $ fromList [("view1", fromList [("map", "fdjdsfklsfj")])]
+    
