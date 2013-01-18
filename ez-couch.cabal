@@ -29,6 +29,7 @@ library
                     Util.Logging
                     Util.PrettyPrint
   build-depends:    base == 4.5.*,
+                    ghc-prim == 0.2.*,
                     lifted-base == 0.2.*,
                     basic-prelude >= 0.3.2.0 && < 0.4,
                     transformers-base == 0.4.*,
