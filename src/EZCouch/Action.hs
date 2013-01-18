@@ -21,7 +21,7 @@ instance (MonadResource m, MonadBaseControl IO m) => MonadAction (ReaderT (Conne
 action
   :: (MonadAction m) 
   => Method
-  -> [ByteString]
+  -> [Text]
   -> [CC.CouchQP]
   -> LByteString
   -> m (ResumableSource m ByteString)
@@ -41,7 +41,7 @@ action method path qps body
     request (ConnectionSettings host port auth database) 
       = authenticated $ def {
           method = method,
-          host = host,
+          host = encodeUtf8 host,
           requestHeaders = headers,
           port = port,
           path = packPath $ database : path,
@@ -52,7 +52,7 @@ action method path qps body
         }
       where
         authenticated
-          | Just (username, password) <- auth = applyBasicAuth username password
+          | Just (username, password) <- auth = applyBasicAuth (encodeUtf8 username) (encodeUtf8 password)
           | otherwise = id
 
     checkStatus status@(Status code message) headers
@@ -68,4 +68,4 @@ runWithManager manager settings action = runReaderT action (settings, manager)
 run settings action = HTTP.withManager $ 
   \manager -> runWithManager manager settings action
 
-packPath = Blaze.toByteString . HTTP.encodePathSegments . map decodeUtf8 . filter (/="")
+packPath = Blaze.toByteString . HTTP.encodePathSegments . filter (/="")

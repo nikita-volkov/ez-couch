@@ -52,7 +52,7 @@ vectorSource vec = Conduit.sourceState (GVector.stream vec) f
 
 type RowParser a = Aeson.Value -> Either Text a
 
-idRevRowParser :: RowParser (ByteString, Maybe ByteString)
+idRevRowParser :: RowParser (Text, Maybe Text)
 idRevRowParser o @ (Aeson.Object m) 
   | Just rev <- lookup "rev" m,
     Just id <- lookup "id" m

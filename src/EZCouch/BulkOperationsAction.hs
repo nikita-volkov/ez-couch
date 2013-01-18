@@ -14,13 +14,13 @@ import qualified Database.CouchDB.Conduit.View.Query as CC
 import Data.Aeson as Aeson
 
 data BulkOperation a
-  = Create ByteString a
-  | Update ByteString ByteString a
-  | Delete ByteString ByteString
+  = Create Text a
+  | Update Text Text a
+  | Delete Text Text
 
 bulkOperationsAction :: (MonadAction m, Doc a) 
   => [BulkOperation a] 
-  -> m [(ByteString, Maybe ByteString)]
+  -> m [(Text, Maybe Text)]
   -- ^ Maybe rev by id. Nothing on failure.
 bulkOperationsAction ops = do
   response <- postAction path qps body
@@ -54,8 +54,8 @@ delete :: (MonadAction m, Doc a) => Persisted a -> m ()
 delete = deleteMultiple . singleton
 
 createMultipleWithIds :: (MonadAction m, Doc a) 
-  => [(ByteString, a)] 
-  -> m [Either (ByteString, a) (Persisted a)]
+  => [(Text, a)] 
+  -> m [Either (Text, a) (Persisted a)]
 createMultipleWithIds idsToVals 
   = bulkOperationsAction [Create id val | (id, val) <- idsToVals]
       >>= mapM convertResult
@@ -67,7 +67,7 @@ createMultipleWithIds idsToVals
       Persisted <$> pure id <*> pure rev <*> lookupThrowing id valById
 
 createWithId :: (MonadAction m, Doc a)
-  => ByteString
+  => Text
   -> a
   -> m (Persisted a)
 createWithId id val = createMultipleWithIds [(id, val)] 
