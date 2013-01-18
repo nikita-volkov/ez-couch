@@ -17,6 +17,7 @@ library
                     Data.Aeson.Parser.Internal
                     Data.Aeson.Types.Class
                     Data.Aeson.Types.Internal
+                    Database.CouchDB.Conduit.View.Query
                     EZCouch.Action
                     EZCouch.BulkOperationsAction
                     EZCouch.Design
