@@ -5,18 +5,13 @@ module EZCouch.Encoding where
 
 import Prelude ()
 import ClassyPrelude 
-import Data.Generics
-import qualified Data.ByteString.Lazy.Char8 -- export instances for LByteString
-import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.FixedGeneric as GAeson
+import Data.ByteString.Lazy.Char8 () -- export instances for LByteString
+import Data.Aeson as Aeson
 
-docType :: (Data a) => a -> ByteString
-docType = fromString . showConstr . fromMaybe undefined . listToMaybe . dataTypeConstrs . dataTypeOf 
+keysBody :: (ToJSON a) => a -> LByteString
+keysBody keys = "{\"keys\":" ++ encode keys ++ "}"
 
-keysBody :: (Data a) => a -> LByteString
-keysBody keys = "{\"keys\":" ++ GAeson.encode keys ++ "}"
-
-insertPairs pairs (Aeson.Object m) 
-  = Aeson.Object $ fold (flip . uncurry $ insert) m pairs
+insertPairs pairs (Object m) 
+  = Object $ fold (flip . uncurry $ insert) m pairs
 
 
