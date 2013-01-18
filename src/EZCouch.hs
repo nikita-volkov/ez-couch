@@ -24,8 +24,11 @@ module EZCouch (
   -- ** Deleting Monadic Functions
   delete,
   deleteMultiple,
+  -- * Working with Documents
+  Doc(..),
   -- * Working with Design Documents
   Design(..),
+  View(..),
   createOrUpdateDesign,
   readDesign,
   -- * Types
@@ -43,3 +46,4 @@ import EZCouch.Types as Types
 import EZCouch.ReadAction as ReadAction
 import EZCouch.BulkOperationsAction as BulkOperationsAction
 import EZCouch.Design as Design
+import EZCouch.Doc as Design

@@ -3,7 +3,9 @@ module EZCouch.Design where
 
 import Prelude ()
 import ClassyPrelude
-import Data.Generics
+import GHC.Generics
+import EZCouch.Doc
+import Data.Aeson
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.HTTP.Conduit as HTTP
 
@@ -17,13 +19,23 @@ import EZCouch.Parsing
 
 data Design a 
   = Design {
-      views :: Map Text (Map Text Text)  
+      views :: Map Text View
     }
-  deriving (Show, Eq, Data, Typeable)
+  deriving (Show, Eq, Generic)
+instance ToJSON (Design a)
+instance FromJSON (Design a)
+instance (Doc a) => Doc (Design a)
+
+data View = View { map :: Text, reduce :: Maybe Text }
+  deriving (Show, Eq, Generic)
+instance ToJSON View
+instance FromJSON View where
+  parseJSON = withObject "View" $ \o -> 
+    View <$> o .: "map" <*> o .:? "reduce"  
 
 designName = docType . (undefined :: Design a -> a)
 
-readDesign :: (MonadAction m, Data a) => m (Maybe (Persisted (Design a)))
+readDesign :: (MonadAction m, Doc a) => m (Maybe (Persisted (Design a)))
 readDesign = result
   where
     result 
@@ -36,7 +48,7 @@ readDesign = result
         processException (HTTP.StatusCodeException (HTTP.Status 404 _) _) = return Nothing
         processException e = throwIO e
 
-createOrUpdateDesign :: (MonadAction m, Data a) => Design a -> m ()
+createOrUpdateDesign :: (MonadAction m, Doc a) => Design a -> m ()
 createOrUpdateDesign design = do
   design' <- readDesign
   case design' of
