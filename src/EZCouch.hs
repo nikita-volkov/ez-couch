@@ -4,28 +4,26 @@ module EZCouch (
   MonadAction(..),
   run,
   runWithManager,
-  -- * CRUD Monadic Functions
+  -- ** CRUD Monadic Functions for Working with Records
   -- | All monadic functions are split into `CRUD` categories. The functions with a 'Multiple' suffix should be used for performing multiple operations at once.
   
-  -- ** Creating Monadic Functions
+  -- ** Creating 
   create,
   createMultiple,
   createWithId,
   createMultipleWithIds,
-  -- ** Reading Monadic Functions
+  -- ** Reading 
   readMultiple,
   readExists,
   readIds,
   readKeys,
   readCount,
-  -- ** Updating Monadic Functions
+  -- ** Updating 
   update,
   updateMultiple,
-  -- ** Deleting Monadic Functions
+  -- ** Deleting 
   delete,
   deleteMultiple,
-  -- * Working with Documents
-  Doc(..),
   -- * Working with Design Documents
   Design(..),
   View(..),
@@ -37,8 +35,12 @@ module EZCouch (
   ReadOptions(..),
   readOptions,
   ConnectionSettings(..),
-  defaultPort
-
+  defaultPort,
+  -- * Classes which records should implement
+  Doc(..),
+  -- ** Aeson re-exports
+  ToJSON(..),
+  FromJSON(..)
 ) where
 
 import EZCouch.Action
@@ -47,3 +49,4 @@ import EZCouch.ReadAction as ReadAction
 import EZCouch.BulkOperationsAction as BulkOperationsAction
 import EZCouch.Design as Design
 import EZCouch.Doc as Design
+import Data.Aeson as Aeson
