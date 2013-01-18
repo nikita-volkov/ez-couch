@@ -14,6 +14,7 @@ import qualified Util.Logging as Logging
 
 log lvl = Logging.log "action" lvl
 
+-- | All EZCouch operations are performed in this monad.
 class (MonadBaseControl IO m, MonadResource m, MonadReader (ConnectionSettings, Manager) m) => MonadAction m where
 
 instance (MonadResource m, MonadBaseControl IO m) => MonadAction (ReaderT (ConnectionSettings, Manager) m) 
