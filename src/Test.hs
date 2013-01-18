@@ -40,17 +40,10 @@ testConnectionAlive i = trace (show i) $ if i > 0
   else return ()
 
   
--- main = getCurrentTime >>= print
 main = run connection $ do
   liftIO $ Logging.initialize
-  design :: Maybe (Persisted (Design Download)) <- readDesign
-  return design
---   purge
--- --   -- generateEntitiesInDB
---   testConnectionAlive 2000
---   -- createOrUpdateView db "De" "Vi" "AAAA" Nothing
---   -- createOrUpdateView db "De" "Vi1" "AAAA" Nothing
-
-
-data Download = Download { downloadA :: Text } deriving (Data, Typeable)
+  createOrUpdateDesign design
+  where 
+    design :: Design A
+      = Design $ fromList [("view1", fromList [("map", "fdjdsfklsfj")])]
     
