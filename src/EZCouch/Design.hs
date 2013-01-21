@@ -13,27 +13,11 @@ import EZCouch.ReadAction
 import EZCouch.Action
 import EZCouch.BulkOperationsAction
 import EZCouch.Types
-import EZCouch.Encoding
 import EZCouch.Parsing
 
+import EZCouch.Model.Design
+import EZCouch.Model.View
 
-data Design a 
-  = Design {
-      views :: Map Text View
-    }
-  deriving (Show, Eq, Generic)
-instance ToJSON (Design a)
-instance FromJSON (Design a)
-instance (Doc a) => Doc (Design a)
-
-data View = View { map :: Text, reduce :: Maybe Text }
-  deriving (Show, Eq, Generic)
-instance ToJSON View
-instance FromJSON View where
-  parseJSON = withObject "View" $ \o -> 
-    View <$> o .: "map" <*> o .:? "reduce"  
-
-designName = docType . (undefined :: Design a -> a)
 
 readDesign :: (MonadAction m, Doc a) => m (Maybe (Persisted (Design a)))
 readDesign = result
@@ -55,7 +39,9 @@ createOrUpdateDesign design = do
     Just (Persisted id rev design'') -> if design'' == design
       then return ()
       else void $ update $ Persisted id rev design
-    Nothing -> void $ createWithId id design
+    Nothing -> void $ createDesign design
+
+createDesign :: (MonadAction m, Doc a) => Design a -> m (Persisted (Design a))
+createDesign design = createWithId id design
   where
     id = "_design/" ++ designName design
-

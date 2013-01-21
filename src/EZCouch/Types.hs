@@ -19,10 +19,14 @@ data EZCouchException
 instance Exception EZCouchException
 
 
+newtype View a = View { viewName :: Text }
+  deriving (Show, Data, Typeable, Eq, Ord)
+
+
 data ReadOptions a k
   = ReadOptions {
       readOptionsKeys :: Maybe [k],
-      readOptionsView :: Maybe Text,
+      readOptionsView :: Maybe (View a),
       readOptionsDescending :: Bool,
       readOptionsLimit :: Maybe Int,
       readOptionsSkip :: Int

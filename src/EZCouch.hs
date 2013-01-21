@@ -24,14 +24,12 @@ module EZCouch (
   -- ** Deleting 
   delete,
   deleteMultiple,
-  -- * Working with Design Documents
-  Design(..),
-  View(..),
-  createOrUpdateDesign,
-  readDesign,
+  -- * Working with Views
+  createOrUpdateView,
   -- * Types
   Persisted(..),
   EZCouchException(..),
+  View(..),
   ReadOptions(..),
   readOptions,
   ConnectionSettings(..),
@@ -47,6 +45,6 @@ import EZCouch.Action
 import EZCouch.Types
 import EZCouch.ReadAction
 import EZCouch.BulkOperationsAction
-import EZCouch.Design
+import EZCouch.View
 import EZCouch.Doc
 import Data.Aeson

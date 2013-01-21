@@ -30,7 +30,7 @@ readAction includeDocs ro@(ReadOptions keys view desc limit skip) = case keys of
     includeDocsQPs = if includeDocs then [CC.QPIncludeDocs] else []
     docTypeQPs = [CC.QPStartKey (docType' ++ "-"), CC.QPEndKey (docType' ++ "_")]
     path 
-      | Just view' <- view = ["_design", docType', "_view", view']
+      | Just view' <- view = ["_design", docType', "_view", viewName view']
       | otherwise = ["_all_docs"]
     descQP = if desc then Just CC.QPDescending else Nothing
     limitQP = CC.QPLimit <$> limit
