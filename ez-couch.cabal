@@ -17,9 +17,12 @@ library
                     EZCouch.Design
                     EZCouch.Encoding
                     EZCouch.Ids
+                    EZCouch.Model.Design
+                    EZCouch.Model.View
                     EZCouch.Parsing
                     EZCouch.ReadAction
                     EZCouch.Types
+                    EZCouch.View
                     Util.Logging
                     Util.PrettyPrint
   build-depends:    base == 4.5.*,
