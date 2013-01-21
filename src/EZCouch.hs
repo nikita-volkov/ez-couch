@@ -6,8 +6,6 @@ module EZCouch (
   -- ** Creating 
   create,
   createMultiple,
-  createWithId,
-  createMultipleWithIds,
   -- ** Reading 
   readMultiple,
   readExists,
