@@ -14,21 +14,22 @@ import qualified EZCouch.Model.Design as DesignModel
 import qualified EZCouch.Model.View as ViewModel
 
 
-createOrUpdateView :: (Doc a, MonadAction m) => Text -> Maybe Text -> View a -> m ()
-createOrUpdateView mapV reduceV view
-  = readViewDesign view >>= maybe create update'
+createOrUpdateViewDesign :: (Doc a, MonadAction m) => Text -> Maybe Text -> View a -> m (Persisted (DesignModel.Design a))
+createOrUpdateViewDesign mapV reduceV view
+  = readDesign >>= maybe create update'
   where
-    create = void $ createDesign $ newViewDesign mapV reduceV view
+    create = createDesign $ DesignModel.Design $ fromList [(viewName view, viewModel)]
     update' design@(Persisted id rev (DesignModel.Design viewsMap))
       | Just viewModel' <- lookup viewName' viewsMap
         = if viewModel' == viewModel
-            then return ()
-            else void $ update $ asTypeOf design $ Persisted id rev $ DesignModel.Design $ adjust (const $ viewModel) viewName' viewsMap
+            then return design
+            else update $ Persisted id rev $ DesignModel.Design $ adjust (const $ viewModel) viewName' viewsMap
     viewName' = viewName view
     viewModel = ViewModel.View mapV reduceV
 
-readViewDesign :: (Doc a, MonadAction m) => View a -> m (Maybe (Persisted (DesignModel.Design a)))
-readViewDesign = const readDesign
-
-newViewDesign :: (Doc a) => Text -> Maybe Text -> View a -> DesignModel.Design a
-newViewDesign mapV reduceV view = DesignModel.Design $ fromList [(viewName view, ViewModel.View mapV reduceV)]
+createOrUpdateView :: (Doc a, MonadAction m) 
+  => Text       -- ^ /map/-function
+  -> Maybe Text -- ^ /reduce/-function
+  -> View a     -- ^ view identifier
+  -> m ()
+createOrUpdateView map reduce view = void $ createOrUpdateViewDesign map reduce view
