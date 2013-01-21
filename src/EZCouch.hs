@@ -1,10 +1,6 @@
 {-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
 module EZCouch (
-  -- * Execution Monad
-  MonadAction(..),
-  run,
-  runWithManager,
-  -- ** CRUD Monadic Functions for Working with Records
+  -- * CRUD Monadic Functions for Working with Records
   -- | All monadic functions are split into /CRUD/ categories. The functions with a /Multiple/ suffix are better alternatives for performing multiple operations at once.
 
   -- ** Creating 
@@ -24,8 +20,10 @@ module EZCouch (
   -- ** Deleting 
   delete,
   deleteMultiple,
+  
   -- * Working with Views
-  createOrUpdateView,
+  createOrUpdateView,  
+
   -- * Types
   Persisted(..),
   EZCouchException(..),
@@ -34,6 +32,12 @@ module EZCouch (
   readOptions,
   ConnectionSettings(..),
   defaultPort,
+
+  -- * Execution Monad
+  MonadAction(..),
+  run,
+  runWithManager,
+
   -- * Classes which records should implement
   Doc(..),
   -- ** Aeson re-exports
