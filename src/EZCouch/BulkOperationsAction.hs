@@ -3,6 +3,7 @@ module EZCouch.BulkOperationsAction where
 
 import Prelude ()
 import ClassyPrelude.Conduit hiding (log)
+import Control.Monad (join)
 import Control.Monad.Trans.Resource
 import EZCouch.Ids 
 import EZCouch.Action

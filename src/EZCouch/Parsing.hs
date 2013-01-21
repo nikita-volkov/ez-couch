@@ -5,6 +5,7 @@ module EZCouch.Parsing where
 import Prelude ()
 import ClassyPrelude.Conduit
 import Data.Text.Lazy (toStrict)
+import Data.Traversable (sequence)
 import EZCouch.Types
 import Data.Aeson as Aeson 
 import qualified Data.Conduit.Util as Conduit
