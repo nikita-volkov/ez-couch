@@ -5,7 +5,7 @@ module EZCouch (
   run,
   runWithManager,
   -- ** CRUD Monadic Functions for Working with Records
-  -- | All monadic functions are split into `CRUD` categories. The functions with a 'Multiple' suffix should be used for performing multiple operations at once.
+  -- | All monadic functions are split into /CRUD/ categories. The functions with a /Multiple/ suffix are better alternatives for performing multiple operations at once.
 
   -- ** Creating 
   create,

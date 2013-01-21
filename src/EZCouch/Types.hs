@@ -13,12 +13,15 @@ data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persis
 
 data EZCouchException 
   = ParsingException Text 
+  -- ^ A response from CouchDB could not be parsed.
   | OperationException Text 
+  -- ^ An operation failed, e.g. a document couldn't be created or deleted.
   | ResponseException Text 
+  -- ^ Invalid response from CouchDB.
   deriving (Show, Data, Typeable)
 instance Exception EZCouchException
 
-
+-- | Identifies a Couch's design and view. The design name is implicitly resolved from the type parameter `a` and becomes the name of this type. The view name however must be specified explicitly.
 newtype View a = View { viewName :: Text }
   deriving (Show, Data, Typeable, Eq, Ord)
 
