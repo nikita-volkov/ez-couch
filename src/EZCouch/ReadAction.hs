@@ -42,6 +42,11 @@ readMultiple options
   = readAction True options 
     >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.persistedRowParser
 
+readOne :: (MonadAction m, Doc a, ToJSON k) => ReadOptions a k -> m (Maybe (Persisted a))
+readOne options = listToMaybe <$> readMultiple options'
+  where
+    options' = options { readOptionsLimit = Just 1 }
+
 readExists :: (MonadAction m, Doc a, ToJSON k, FromJSON k) => ReadOptions a k -> m [(k, Bool)]
 readExists options
   = readAction False options

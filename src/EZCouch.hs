@@ -7,6 +7,7 @@ module EZCouch (
   create,
   createMultiple,
   -- ** Reading 
+  readOne,
   readMultiple,
   readExists,
   readIds,
