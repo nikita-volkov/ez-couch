@@ -26,7 +26,6 @@ isolate timeout id action = do
       isolation <- readOne $ readOptions { readOptionsKeys = Just [id'] }
       case isolation of
         Just isolation -> do
-          time <- readTime
           if (Isolation.since . persistedValue) isolation < Time.addUTCTime (negate $ fromIntegral timeout) time
             then do 
               tryToDelete isolation
