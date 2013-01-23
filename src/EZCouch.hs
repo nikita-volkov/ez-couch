@@ -20,6 +20,9 @@ module EZCouch (
   delete,
   deleteMultiple,
   
+  -- * Server Time
+  readTime,
+
   -- * Working with Views
   createOrUpdateView,  
 
@@ -50,4 +53,5 @@ import EZCouch.ReadAction
 import EZCouch.BulkOperationsAction
 import EZCouch.View
 import EZCouch.Doc
+import EZCouch.Time
 import Data.Aeson

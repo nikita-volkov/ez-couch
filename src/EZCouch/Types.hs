@@ -16,6 +16,8 @@ data EZCouchException
   -- ^ A response from CouchDB could not be parsed.
   | OperationException Text 
   -- ^ An operation failed, e.g. a document couldn't be created or deleted.
+  | ServerException Text
+  -- ^ E.g., server provided an unexpected response
   deriving (Show, Data, Typeable)
 instance Exception EZCouchException
 

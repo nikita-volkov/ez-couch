@@ -19,27 +19,26 @@ class (MonadBaseControl IO m, MonadResource m, MonadReader (ConnectionSettings, 
 
 instance (MonadResource m, MonadBaseControl IO m) => MonadAction (ReaderT (ConnectionSettings, Manager) m) 
 
-action
+responseAction
   :: (MonadAction m) 
   => Method
   -> [Text]
   -> [CC.CouchQP]
   -> LByteString
-  -> m (ResumableSource m ByteString)
-action method path qps body 
+  -> m (Response (ResumableSource m ByteString))
+responseAction method path qps body 
   = do
       (settings, manager) <- ask
-      let req = request settings
+      let request = settingsRequest settings
       log 0 
         $ "Perfroming a " 
           ++ show method ++ " at " 
-          ++ show (HTTP.path req ++ "?" ++ HTTP.queryString req)
-      Response _ _ _ body <- http req manager 
-      return body
+          ++ show (HTTP.path request ++ "?" ++ HTTP.queryString request)
+      http request manager 
   where
     headers = [("Content-Type", "application/json")]
     query = renderQuery False $ CC.mkQuery qps
-    request (ConnectionSettings host port auth database) 
+    settingsRequest (ConnectionSettings host port auth database) 
       = authenticated $ def {
           method = method,
           host = encodeUtf8 host,
@@ -60,6 +59,8 @@ action method path qps body
       | elem code [200, 201, 202, 304] = Nothing
       | otherwise = Just $ SomeException $ StatusCodeException status headers
 
+action method path qps body 
+  = responseBody <$> responseAction method path qps body 
 putAction = action HTTP.methodPut
 postAction = action HTTP.methodPost
 getAction = action HTTP.methodGet

@@ -47,8 +47,17 @@ testConnectionAlive i = trace (show i) $ if i > 0
   
 main = run connection $ do
   liftIO $ Logging.initialize
-  createOrUpdateDesign design
-  where 
-    design :: Design A
-      = Design $ fromList [("view1", View "lsdkfjs" Nothing)]
-    
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
+  EZCouch.readTime >>= print
