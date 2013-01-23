@@ -36,6 +36,9 @@ module EZCouch (
   ConnectionSettings(..),
   defaultPort,
 
+  -- * Helpers
+  tryOperation,
+
   -- * Execution Monad
   MonadAction(..),
   run,
@@ -55,4 +58,5 @@ import EZCouch.BulkOperationsAction
 import EZCouch.View
 import EZCouch.Doc
 import EZCouch.Time
+import EZCouch.Try
 import Data.Aeson
