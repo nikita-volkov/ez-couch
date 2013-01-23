@@ -49,5 +49,5 @@ library
                     random == 1.0.*,
                     resourcet == 0.4.*,
                     string-conversions == 0.2.*,
-                    classy-prelude >= 0.4.3 && < 0.5,
-                    classy-prelude-conduit == 0.4.*
+                    classy-prelude >= 0.4.3,
+                    classy-prelude-conduit >= 0.4
