@@ -9,7 +9,7 @@ import Data.Aeson
 import Data.Time
 
 data Isolation 
-  = Isolation 
+  = Isolation { since :: UTCTime }
   deriving (Show, Eq, Generic)
 instance ToJSON (Isolation)
 instance FromJSON (Isolation)
