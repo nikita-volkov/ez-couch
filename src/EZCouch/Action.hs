@@ -47,8 +47,8 @@ responseAction method path qps body
           path = packPath $ database : path,
           queryString = query,
           requestBody = RequestBodyLBS body,
-          checkStatus = checkStatus
-          -- responseTimeout = Just $ 10 ^ 6 * 30
+          checkStatus = checkStatus,
+          responseTimeout = Just $ 10 ^ 6 * 10
         }
       where
         authenticated
