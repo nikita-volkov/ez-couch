@@ -17,7 +17,9 @@ library
                     EZCouch.Design
                     EZCouch.Encoding
                     EZCouch.Ids
+                    EZCouch.Isolation
                     EZCouch.Model.Design
+                    EZCouch.Model.Isolation
                     EZCouch.Model.View
                     EZCouch.Parsing
                     EZCouch.ReadAction
