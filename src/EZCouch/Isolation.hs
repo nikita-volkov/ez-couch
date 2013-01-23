@@ -34,10 +34,7 @@ isolate timeout id action = do
             else return Nothing
         Nothing -> return Nothing
     Left e -> throwIO e
-    Right isolation -> do
-      result <- action
-      delete isolation
-      return $ Just result
+    Right isolation -> finally (Just <$> action) (delete isolation)
   where 
     id' = "EZCouchIsolation-" ++ id
 
