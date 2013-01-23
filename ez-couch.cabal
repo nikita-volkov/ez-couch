@@ -7,7 +7,7 @@ cabal-version:      >=1.8
 
 library
   hs-source-dirs:   src
-  ghc-options:      -O2 -threaded -with-rtsopts=-N
+  ghc-options:      -O2
   extensions:       PatternGuards
   exposed-modules:  EZCouch
   other-modules:    Database.CouchDB.Conduit.View.Query
