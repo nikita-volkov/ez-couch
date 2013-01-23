@@ -10,7 +10,7 @@ import EZCouch.Action
 import EZCouch.BulkOperationsAction
 import EZCouch.Model.Isolation as Isolation
 
--- | Protect an action from being executed on multiple clients. Can be used to create transactions in a preemptive manner, i.e. instead of performing some actions and rolling back on transaction validation failure, do the transaction validation based on the provided identifier prior to actually executing the transaction. This function however does not protect from unfinished transactions.
+-- | Protect an action from being executed on multiple clients. Can be used to create transactions in a preemptive manner, i.e. instead of performing some actions and rolling back on transaction validation failure, do validation based on the provided identifier prior to actually executing the transaction. This function however does not provide you with guarantees that the action will either be executed in whole or not executed at all, as it does not rollback in case of client-interrupt - it's up to your algorithms to handle those cases.
 isolate :: MonadAction m 
   => Text -- ^ A unique isolation identifier. It's a common practice to provide a 'persistedId' of the primary entity involved in the transaction, which is supposed to uniquely identify it.
   -> m a -- ^ The action to protect. Nothing of it will be executed if an isolation with the same id is already running.
