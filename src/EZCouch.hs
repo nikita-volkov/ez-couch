@@ -7,6 +7,7 @@ module EZCouch (
   create,
   createMultiple,
   -- ** Reading 
+  -- | All reading actions accept a `ReadOptions` parameter which specifies how filtering and ordering should go.
   readOne,
   readMultiple,
   readExists,
