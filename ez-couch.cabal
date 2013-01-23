@@ -21,6 +21,7 @@ library
                     EZCouch.Model.View
                     EZCouch.Parsing
                     EZCouch.ReadAction
+                    EZCouch.Time
                     EZCouch.Types
                     EZCouch.View
                     Util.Logging
