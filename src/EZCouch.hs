@@ -27,6 +27,10 @@ module EZCouch (
   -- * Working with Views
   createOrUpdateView,  
 
+  -- * Transactions
+  -- | CouchDB doesn't provide a way to do traditional locking-based transactions, as it applies an Optimistic Concurrency Control strategy (<http://en.wikipedia.org/wiki/Optimistic_concurrency_control>). EZCouch approaches the issue by abstracting over it.
+  isolate,
+
   -- * Types
   Persisted(..),
   EZCouchException(..),
@@ -58,5 +62,6 @@ import EZCouch.BulkOperationsAction
 import EZCouch.View
 import EZCouch.Doc
 import EZCouch.Time
+import EZCouch.Isolation
 import EZCouch.Try
 import Data.Aeson
