@@ -13,4 +13,5 @@ data Isolation
   deriving (Show, Eq, Generic)
 instance ToJSON (Isolation)
 instance FromJSON (Isolation)
-instance Doc (Isolation)
+instance Doc (Isolation) where
+  docType = const "EZCouchIsolation"
