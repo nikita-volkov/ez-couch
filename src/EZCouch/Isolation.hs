@@ -14,11 +14,11 @@ import EZCouch.Model.Isolation as Isolation
 
 -- | Protect an action from being executed on multiple clients. Can be used to create transactions in a preemptive manner, i.e. instead of performing some actions and rolling back on transaction validation failure, do validation based on the provided identifier prior to actually executing the transaction. This function however does not provide you with guarantees that the action will either be executed in whole or not executed at all, as it does not rollback in case of client-interrupt - it's up to your algorithms to handle those cases.
 isolate :: MonadAction m 
-  => Text -- ^ A unique isolation identifier. It's a common practice to provide a 'persistedId' of the primary entity involved in the transaction, which is supposed to uniquely identify it.
-  -> Int -- ^ A timeout in seconds. If after reaching it a conflicting isolation marker still exists in the db, it gets considered to be zombie (probably caused by a client interruption). The marker gets deleted and the current isolation gets reexecuted.
+  => Int -- ^ A timeout in seconds. If after reaching it a conflicting isolation marker still exists in the db, it gets considered to be zombie (probably caused by a client interruption). The marker gets deleted and the current isolation gets reexecuted.
+  -> Text -- ^ A unique isolation identifier. It's a common practice to provide a 'persistedId' of the primary entity involved in the transaction, which is supposed to uniquely identify it.
   -> m a -- ^ The action to protect. Nothing of it will be executed if an isolation with the same id is already running.
   -> m (Maybe a) -- ^ Either the action's result or `Nothing` if it didn't get executed.
-isolate id timeout action = do
+isolate timeout id action = do
   time <- readTime 
   result <- (try $ createWithId id' $ Isolation time)
   case result of
@@ -30,7 +30,7 @@ isolate id timeout action = do
           if (Isolation.since . persistedValue) isolation < Time.addUTCTime (negate $ fromIntegral timeout) time
             then do 
               tryToDelete isolation
-              isolate id timeout action
+              isolate timeout id action
             else return Nothing
         Nothing -> return Nothing
     Left e -> throwIO e
