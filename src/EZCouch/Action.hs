@@ -22,11 +22,11 @@ instance (MonadResource m, MonadBaseControl IO m) => MonadAction (ReaderT (Conne
 responseAction
   :: (MonadAction m) 
   => Method
-  -> [Text]
+  -> Maybe [Text]
   -> [CC.CouchQP]
   -> LByteString
   -> m (Response (ResumableSource m ByteString))
-responseAction method path qps body 
+responseAction method dbPath qps body 
   = do
       (settings, manager) <- ask
       let request = settingsRequest settings
@@ -44,7 +44,7 @@ responseAction method path qps body
           host = encodeUtf8 host,
           requestHeaders = headers,
           port = port,
-          path = packPath $ database : path,
+          path = packPath $ maybe [] (database : ) $ dbPath,
           queryString = query,
           requestBody = RequestBodyLBS body,
           checkStatus = checkStatus,
@@ -60,7 +60,7 @@ responseAction method path qps body
       | otherwise = Just $ SomeException $ StatusCodeException status headers
 
 action method path qps body 
-  = responseBody <$> responseAction method path qps body 
+  = responseBody <$> responseAction method (Just path) qps body 
 putAction = action HTTP.methodPut
 postAction = action HTTP.methodPost
 getAction = action HTTP.methodGet
