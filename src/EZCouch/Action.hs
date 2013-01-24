@@ -12,7 +12,7 @@ import qualified Database.CouchDB.Conduit.View.Query as CC
 import qualified Blaze.ByteString.Builder as Blaze
 import qualified Util.Logging as Logging
 
-log lvl = Logging.log "action" lvl
+log lvl = Logging.log "EZCouch.Action" lvl
 
 -- | All EZCouch operations are performed in this monad.
 class (MonadBaseControl IO m, MonadResource m, MonadReader (ConnectionSettings, Manager) m) => MonadAction m where
