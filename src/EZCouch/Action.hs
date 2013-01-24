@@ -31,7 +31,7 @@ responseAction method dbPath qps body
       (settings, manager) <- ask
       let request = settingsRequest settings
       log 0 
-        $ "Perfroming a " 
+        $ "Performing a " 
           ++ show method ++ " at " 
           ++ show (HTTP.path request ++ "?" ++ HTTP.queryString request)
       http request manager 
