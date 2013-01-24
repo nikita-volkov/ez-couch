@@ -70,8 +70,7 @@ keyExistsRowParser o @ (Aeson.Object m)
   | Just "not_found" <- lookup "error" m,
     Just key <- lookup "key" m
     = (,) <$> fromJSON' key <*> pure False
-  | Just id <- lookup "id" m,
-    Just (Aeson.Object valueM) <- lookup "value" m,
+  | Just (Aeson.Object valueM) <- lookup "value" m,
     Just (Aeson.Bool True) <- lookup "deleted" valueM,
     Just key <- lookup "key" m
     = (,) <$> fromJSON' key <*> pure False
@@ -82,14 +81,14 @@ keyExistsRowParser o @ (Aeson.Object m)
   | otherwise
     = Left $ unexpectedRowValueText o
 
-persistedRowParser :: (FromJSON a) => RowParser (Persisted a)
-persistedRowParser o @ (Aeson.Object m) 
-  | Just id <- lookup "id" m,
-    Just (Aeson.Object valueM) <- lookup "value" m,
-    Just doc <- lookup "doc" m,
-    Aeson.Object docM <- doc,
-    Just rev <- lookup "_rev" docM
-    = Persisted <$> fromJSON' id <*> fromJSON' rev <*> fromJSON' doc
+persistedRowParser :: (FromJSON a) => RowParser (Maybe (Persisted a))
+persistedRowParser o
+  | Just (Aeson.Bool True) <- o .? "value" ?.? "deleted"
+    = Right Nothing
+  | Just id <- o .? "id", 
+    Just doc <- o .? "doc",
+    Just rev <- doc .? "_rev"
+    = fmap Just $ Persisted <$> fromJSON' id <*> fromJSON' rev <*> fromJSON' doc
   | otherwise
     = Left $ unexpectedRowValueText o
 
@@ -134,3 +133,8 @@ fromJSON' v = case fromJSON v of
 
 unexpectedRowValueText o
   = "Unexpected row value: " ++ (toStrict . decodeUtf8 $ Aeson.encode o)
+
+o .? k = pure o ?.? k
+o ?.? k = o >>= objectKey k
+objectKey k (Aeson.Object m) = lookup k m
+objectKey _ _ = Nothing

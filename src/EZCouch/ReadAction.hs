@@ -40,7 +40,8 @@ readAction includeDocs ro@(ReadOptions keys view desc limit skip) = case keys of
 readMultiple :: (MonadAction m, Doc a, ToJSON k) => ReadOptions a k -> m [Persisted a]
 readMultiple options 
   = readAction True options 
-    >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.persistedRowParser
+    >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.persistedRowParser  
+    >>= return . catMaybes
 
 readOne :: (MonadAction m, Doc a, ToJSON k) => ReadOptions a k -> m (Maybe (Persisted a))
 readOne options = listToMaybe <$> readMultiple options'
