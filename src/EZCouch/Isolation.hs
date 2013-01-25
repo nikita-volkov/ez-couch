@@ -16,7 +16,7 @@ import qualified Util.Logging as Logging
 
 log lvl = Logging.log "EZCouch.Isolation" lvl
 
--- | Protect an action from being executed on multiple clients. Can be used to create transactions in a preemptive manner, i.e. instead of performing some actions and rolling back on transaction validation failure, do validation based on the provided identifier prior to actually executing the transaction. This function however does not provide you with atomicity guarantees (<http://en.wikipedia.org/wiki/Atomicity_(database_systems)>), as it does not rollback in case of client-interrupt - it's up to your algorithms to handle those cases.
+-- | Protect an action from being executed on multiple clients. Can be used to create transactions in a preemptive manner, i.e. instead of performing some actions and rolling back on transaction validation failure it does validation based on the provided identifier prior to actually executing the transaction. This function however does not provide you with atomicity guarantees (<http://en.wikipedia.org/wiki/Atomicity_(database_systems)>), as it does not rollback in case of client-interrupt - it's up to your algorithms to handle those cases.
 isolate :: MonadAction m 
   => Int -- ^ A timeout in seconds. If after reaching it a conflicting isolation marker still exists in the db, it gets considered to be zombie (probably caused by a client interruption). The marker gets deleted and the current action gets executed.
   -> Text -- ^ A unique isolation identifier. It's a common practice to provide a 'persistedId' of the primary entity involved in the transaction, which is supposed to uniquely identify it.
