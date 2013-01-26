@@ -8,6 +8,7 @@ import Control.Monad.Reader
 import EZCouch.Types
 import Network.HTTP.Types as HTTP
 import Network.HTTP.Conduit as HTTP
+import Network.HTTP.Conduit.Request as HTTP
 import qualified Database.CouchDB.Conduit.View.Query as CC
 import qualified Blaze.ByteString.Builder as Blaze
 import qualified Util.Logging as Logging
@@ -33,7 +34,7 @@ responseAction method dbPath qps body
       log 0 
         $ "Performing a " 
           ++ show method ++ " at " 
-          ++ show (HTTP.path request ++ "?" ++ HTTP.queryString request)
+          ++ show (HTTP.url request)
       http request manager 
   where
     headers = [("Content-Type", "application/json")]

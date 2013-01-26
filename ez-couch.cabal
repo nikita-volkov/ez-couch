@@ -27,6 +27,7 @@ library
                     EZCouch.Try
                     EZCouch.Types
                     EZCouch.View
+                    Network.HTTP.Conduit.Request
                     Util.Logging
                     Util.PrettyPrint
   build-depends:    base == 4.5.*,
