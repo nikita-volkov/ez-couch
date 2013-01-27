@@ -1,9 +1,11 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE NoMonomorphismRestriction, OverloadedStrings #-}
 module Control.Retry where
 
 import Prelude ()
 import ClassyPrelude
 import Control.Concurrent
+import qualified Util.Logging as Logging
+
 
 retryingEither [] action = action 
 retryingEither (i:is) action = action >>= processResult
@@ -21,12 +23,14 @@ retrying exceptionIntervals action = retrying_ 0
       where
         exceptionInterval = listToMaybe . drop attempt . exceptionIntervals
         processException e 
-          | Just i <- exceptionInterval e
-            = unless (i == 0) (liftIO (threadDelay i)) 
-              >> retrying_ (attempt + 1)
+          | Just i <- exceptionInterval e = do
+              Logging.log "Control.Retry" 3 
+                $ "Error occurred: " ++ show e ++ ". " 
+                  ++ "Retrying with a " ++ show (i `div` sec) ++ "s delay."
+              unless (i == 0) (liftIO (threadDelay i)) 
+              retrying_ (attempt + 1)
           | otherwise = throwIO e
 
-defaultIntervals = [second, second * 5, second * 15]
-  where 
-    second = 10 ^ 6
+defaultIntervals = [sec, sec * 5, sec * 15]
+sec = 10 ^ 6
 
