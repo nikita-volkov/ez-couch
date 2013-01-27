@@ -6,6 +6,7 @@ import ClassyPrelude.Conduit hiding (log)
 import Control.Exception (SomeException(..))
 import Control.Monad.Reader
 import Control.Retry
+import System.IO.Error (ioeGetErrorString)
 import EZCouch.Types
 import Network.HTTP.Types as HTTP
 import Network.HTTP.Conduit as HTTP
@@ -36,8 +37,10 @@ responseAction method dbPath qps body
         $ "Performing a " 
           ++ show method ++ " at " 
           ++ show (HTTP.url request)
-      (flip catch) handleHttpException 
-        $ retrying exceptionIntervals $ fixedHTTP request manager
+      retrying exceptionIntervals 
+        $ (flip catch) handleIOException
+        $ (flip catch) handleHttpException 
+        $ http request manager
   where
     headers = [("Content-Type", "application/json")]
     query = renderQuery False $ CC.mkQuery qps
@@ -60,11 +63,14 @@ responseAction method dbPath qps body
     checkStatus status@(Status code message) headers
       | elem code [200, 201, 202, 304] = Nothing
       | otherwise = Just $ SomeException $ StatusCodeException status headers
-    exceptionIntervals (FailedConnectionException _ _) = [10^3, 10^6, 10^6*10]
+    exceptionIntervals (ConnectionException _) = [10^3, 10^6, 10^6*10]
     exceptionIntervals _ = []
-    handleHttpException (FailedConnectionException _ _) 
-      = throwIO $ ConnectionException
-    handleHttpException e = throwIO $ e
+    handleHttpException e = case e of
+      FailedConnectionException host port -> throwIO $ ConnectionException 
+        $ "FailedConnectionException: " ++ pack host ++ " " ++ show port
+      otherwise -> throwIO e
+    handleIOException e = throwIO $ ConnectionException 
+      $ "IOError: " ++ pack (ioeGetErrorString e)
 
 action method path qps body 
   = responseBody <$> responseAction method (Just path) qps body 
