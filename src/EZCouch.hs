@@ -32,6 +32,8 @@ module EZCouch (
   -- * Transactions
   -- | CouchDB doesn't provide a way to do traditional locking-based transactions, as it applies an Optimistic Concurrency Control strategy (<http://en.wikipedia.org/wiki/Optimistic_concurrency_control>). EZCouch approaches the issue by abstracting over it.
   inIsolation,
+  isolateDoc,
+  DocIsolation(..),
 
   -- * Types
   Persisted(..),
