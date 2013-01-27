@@ -18,6 +18,7 @@ data EZCouchException
   -- ^ An operation failed, e.g. a document couldn't be created or deleted.
   | ServerException Text
   -- ^ E.g., server provided an unexpected response
+  | ConnectionException
   deriving (Show, Data, Typeable)
 instance Exception EZCouchException
 

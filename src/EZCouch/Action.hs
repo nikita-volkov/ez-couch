@@ -5,6 +5,7 @@ import Prelude ()
 import ClassyPrelude.Conduit hiding (log)
 import Control.Exception (SomeException(..))
 import Control.Monad.Reader
+import Control.Retry
 import EZCouch.Types
 import Network.HTTP.Types as HTTP
 import Network.HTTP.Conduit as HTTP
@@ -35,7 +36,8 @@ responseAction method dbPath qps body
         $ "Performing a " 
           ++ show method ++ " at " 
           ++ show (HTTP.url request)
-      http request manager 
+      (flip catch) handleHttpException 
+        $ retrying exceptionIntervals $ fixedHTTP request manager
   where
     headers = [("Content-Type", "application/json")]
     query = renderQuery False $ CC.mkQuery qps
@@ -55,10 +57,14 @@ responseAction method dbPath qps body
         authenticated
           | Just (username, password) <- auth = applyBasicAuth (encodeUtf8 username) (encodeUtf8 password)
           | otherwise = id
-
     checkStatus status@(Status code message) headers
       | elem code [200, 201, 202, 304] = Nothing
       | otherwise = Just $ SomeException $ StatusCodeException status headers
+    exceptionIntervals (FailedConnectionException _ _) = [10^3, 10^6, 10^6*10]
+    exceptionIntervals _ = []
+    handleHttpException (FailedConnectionException _ _) 
+      = throwIO $ ConnectionException
+    handleHttpException e = throwIO $ e
 
 action method path qps body 
   = responseBody <$> responseAction method (Just path) qps body 

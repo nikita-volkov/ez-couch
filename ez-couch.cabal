@@ -10,7 +10,8 @@ library
   ghc-options:      -O2
   extensions:       PatternGuards
   exposed-modules:  EZCouch
-  other-modules:    Database.CouchDB.Conduit.View.Query
+  other-modules:    Control.Retry
+                    Database.CouchDB.Conduit.View.Query
                     EZCouch.Doc
                     EZCouch.Action
                     EZCouch.BulkOperationsAction

@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module Network.HTTP.Conduit.Request where
 
 import Prelude ()
@@ -38,3 +38,11 @@ url r = concat [
 withResponseTimeout timeout request
   = request { responseTimeout = timeout }
   
+fixedHTTP request manager 
+  = http request manager `catch` handleIOException
+  where
+    handleIOException (e :: IOException) = throwIO 
+      $ FailedConnectionException 
+          (unpack $ decodeUtf8 $ host request) 
+          (port request)
+
