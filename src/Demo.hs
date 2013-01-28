@@ -48,17 +48,6 @@ testConnectionAlive i = trace (show i) $ if i > 0
   
 main = run connection $ do
   liftIO $ Logging.initialize
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
-  EZCouch.readTime >>= liftIO . print
+  replicateM_ 10 $
+    EZCouch.readTime >>= liftIO . print
+  
