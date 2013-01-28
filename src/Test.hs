@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor, DeriveGeneric #-}
 import Prelude ()
 import ClassyPrelude hiding (log)
+import Control.Monad
 import Data.Time
 import Data.Aeson
 import GHC.Generics
@@ -47,17 +48,17 @@ testConnectionAlive i = trace (show i) $ if i > 0
   
 main = run connection $ do
   liftIO $ Logging.initialize
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
-  EZCouch.readTime >>= print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
+  EZCouch.readTime >>= liftIO . print
