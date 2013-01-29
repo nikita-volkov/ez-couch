@@ -31,17 +31,16 @@ responseAction
   -> [CC.CouchQP]
   -> LByteString
   -> m (Response (ResumableSource m ByteString))
-responseAction method dbPath qps body 
-  = do
-      (settings, manager) <- ask
-      let request = settingsRequest settings
-      logM 0 $ "Performing a " 
-        ++ show method ++ " at " 
-        ++ show (HTTP.url request)
-      retrying exceptionIntervals $
-        (flip catch) handleIOException $
-          (flip catch) handleHttpException $ 
-            http request manager
+responseAction method dbPath qps body = do
+  (settings, manager) <- ask
+  let request = settingsRequest settings
+  logM 0 $ "Performing a " 
+    ++ show method ++ " at " 
+    ++ show (HTTP.url request)
+  retrying exceptionIntervals $
+    (flip catch) handleIOException $
+      (flip catch) handleHttpException $ 
+        http request manager
   where
     headers = [("Content-Type", "application/json")]
     query = renderQuery False $ CC.mkQuery qps
