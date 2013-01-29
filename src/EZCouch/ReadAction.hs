@@ -3,7 +3,6 @@ module EZCouch.ReadAction where
 
 import Prelude ()
 import ClassyPrelude.Conduit
-import Control.Monad.Trans.Resource
 import EZCouch.Action
 import EZCouch.Doc
 import EZCouch.Types
