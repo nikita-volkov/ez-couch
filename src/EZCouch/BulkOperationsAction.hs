@@ -8,7 +8,7 @@ import EZCouch.Ids
 import EZCouch.Action
 import EZCouch.Types
 import EZCouch.Doc
-import qualified EZCouch.Parsing as Parsing
+import EZCouch.Parsing
 import qualified EZCouch.Encoding as Encoding
 import qualified Database.CouchDB.Conduit.View.Query as CC
 import Data.Aeson as Aeson
@@ -22,9 +22,9 @@ bulkOperationsAction :: (MonadAction m, Doc a)
   => [BulkOperation a] 
   -> m [(Text, Maybe Text)]
   -- ^ Maybe rev by id. Nothing on failure.
-bulkOperationsAction ops = do
-  response <- postAction path qps body
-  Parsing.parseResponse Parsing.rowsParser2 Parsing.idRevParser response
+bulkOperationsAction ops =
+  postAction path qps body >>= 
+    runParser (rowsParser2 >=> mapM idRevParser . toList)
   where
     path = ["_bulk_docs"]
     qps = []

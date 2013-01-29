@@ -9,11 +9,6 @@ import EZCouch.Types
 import Data.Aeson as Aeson 
 
 type Parser a = Aeson.Value -> Either Text a
-type RowsParser = Parser (Vector Aeson.Value)
-
-parseResponse toRowsParser toValueParser response = 
-  either (throwIO . ParsingException) return $ 
-    toRowsParser response >>= mapM toValueParser . toList
 
 runParser parser response = 
   either (throwIO . ParsingException) return $ parser response
