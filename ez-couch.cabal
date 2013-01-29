@@ -54,7 +54,7 @@ library
                     random == 1.0.*,
                     resourcet >= 0.3,
                     string-conversions == 0.2.*,
-                    classy-prelude >= 0.4.3,
+                    classy-prelude >= 0.4.4,
                     classy-prelude-conduit >= 0.4
 
 executable ez-couch-demo
@@ -86,5 +86,5 @@ executable ez-couch-demo
                     random == 1.0.*,
                     resourcet >= 0.3,
                     string-conversions == 0.2.*,
-                    classy-prelude >= 0.4.3,
+                    classy-prelude >= 0.4.4,
                     classy-prelude-conduit >= 0.4

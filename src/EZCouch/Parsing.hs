@@ -5,7 +5,6 @@ module EZCouch.Parsing where
 import Prelude ()
 import ClassyPrelude.Conduit
 import qualified Data.Text.Lazy as Text
-import qualified Control.Monad as Monad
 import EZCouch.Types
 import Data.Aeson as Aeson 
 import qualified Data.Conduit.Util as Conduit
@@ -19,7 +18,7 @@ import qualified Data.Vector.Fusion.Stream as Stream
 parse rowsSink parser response = do
   rows <- response $$+- rowsSink
   result <- rows $= map parser $$ consume
-  either (monadThrow . ParsingException) return $ Monad.sequence result
+  either (monadThrow . ParsingException) return $ sequence result
 
 parseSingleRow parser response = do
   row <- response $$+- singleRowSink
