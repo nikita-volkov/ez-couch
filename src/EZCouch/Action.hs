@@ -14,6 +14,8 @@ import Network.HTTP.Conduit.Request as HTTP
 import qualified Database.CouchDB.Conduit.View.Query as CC
 import qualified Blaze.ByteString.Builder as Blaze
 import qualified Util.Logging as Logging
+import qualified Data.Aeson as Aeson
+import qualified Data.Conduit.Attoparsec as Atto
 
 log lvl = Logging.log "EZCouch.Action" lvl
 
@@ -33,13 +35,12 @@ responseAction method dbPath qps body
   = do
       (settings, manager) <- ask
       let request = settingsRequest settings
-      log 0 $ 
-        "Performing a " 
-          ++ show method ++ " at " 
-          ++ show (HTTP.url request)
+      log 0 $ "Performing a " 
+        ++ show method ++ " at " 
+        ++ show (HTTP.url request)
       retrying exceptionIntervals $
         (flip catch) handleIOException $
-          (flip catch) handleHttpException $
+          (flip catch) handleHttpException $ 
             http request manager
   where
     headers = [("Content-Type", "application/json")]
@@ -72,8 +73,10 @@ responseAction method dbPath qps body
     handleIOException e = throwIO $ ConnectionException $ 
       "IOError: " ++ pack (ioeGetErrorString e)
 
-action method path qps body = 
-  responseBody <$> responseAction method (Just path) qps body 
+action method path qps body = do
+  body <- responseBody <$> responseAction method (Just path) qps body 
+  body $$+- Atto.sinkParser Aeson.json
+
 putAction = action HTTP.methodPut
 postAction = action HTTP.methodPost
 getAction = action HTTP.methodGet

@@ -7,7 +7,7 @@ import Control.Monad.Trans.Resource
 import EZCouch.Action
 import EZCouch.Doc
 import EZCouch.Types
-import qualified EZCouch.Parsing as Parsing
+import EZCouch.Parsing
 import qualified EZCouch.Encoding as Encoding
 import qualified Database.CouchDB.Conduit.View.Query as CC
 import Data.Aeson.Types
@@ -16,7 +16,7 @@ readAction
   :: (MonadAction m, Doc a, ToJSON k)
   => Bool
   -> ReadOptions a k
-  -> m (ResumableSource m ByteString)
+  -> m (Value)
 readAction includeDocs ro@(ReadOptions keys view desc limit skip) = case keys of
   Nothing -> getAction path (docTypeQPs ++ includeDocsQPs ++ optionsQPs) ""
   Just keys' -> postAction path (includeDocsQPs ++ optionsQPs) (Encoding.keysBody keys')
@@ -38,9 +38,9 @@ readAction includeDocs ro@(ReadOptions keys view desc limit skip) = case keys of
 
 
 readMultiple :: (MonadAction m, Doc a, ToJSON k) => ReadOptions a k -> m [Persisted a]
-readMultiple options 
-  = readAction True options 
-    >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.persistedRowParser  
+readMultiple options = 
+  readAction True options 
+    >>= runParser (rowsParser1 >=> mapM persistedParser . toList) 
     >>= return . catMaybes
 
 readOne :: (MonadAction m, Doc a, ToJSON k) => ReadOptions a k -> m (Maybe (Persisted a))
@@ -49,9 +49,9 @@ readOne options = listToMaybe <$> readMultiple options'
     options' = options { readOptionsLimit = Just 1 }
 
 readExists :: (MonadAction m, Doc a, ToJSON k, FromJSON k) => ReadOptions a k -> m [(k, Bool)]
-readExists options
-  = readAction False options
-    >>= Parsing.parse Parsing.multipleRowsSink1 Parsing.keyExistsRowParser
+readExists options = 
+  readAction False options
+    >>= runParser (rowsParser1 >=> mapM keyExistsParser . toList) 
     
 readIds :: (MonadAction m, Doc a) => ReadOptions a Text -> m [Text]
 readIds = readKeys

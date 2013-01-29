@@ -16,7 +16,6 @@ import EZCouch.Types
 import EZCouch.Parsing
 
 import EZCouch.Model.Design
-import EZCouch.Model.View
 
 
 readDesign :: (MonadAction m, Doc a) => m (Maybe (Persisted (Design a)))
@@ -25,7 +24,7 @@ readDesign = result
     result 
       = (flip catch) processException
         $ getAction ["_design", designName] [] "" 
-          >>= parseSingleRow errorPersistedParser 
+          >>= runParser errorPersistedParser
           >>= return . either (const Nothing) Just
       where
         designName = docType $ (undefined :: m (Maybe (Persisted (Design a))) -> a) result
