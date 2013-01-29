@@ -5,17 +5,15 @@ import Prelude ()
 import ClassyPrelude.Conduit
 import System.Locale
 import Data.Time
-import Data.Time.Format
 import qualified Network.HTTP.Types as HTTP
-import qualified Network.HTTP.Conduit as HTTP
 
 import EZCouch.Types
 import EZCouch.Action
 
 -- | Current time according to server.
 readTime :: MonadAction m => m UTCTime 
-readTime = responseAction HTTP.methodGet mempty mempty mempty
-  >>= getHeadersTime . HTTP.responseHeaders
+readTime = getResponseHeaders HTTP.methodGet mempty mempty mempty
+  >>= getHeadersTime
 
 getHeadersTime ((name, value) : tail) 
   | name == HTTP.hDate = case toTime value of

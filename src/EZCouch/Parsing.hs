@@ -97,12 +97,15 @@ maybePersistedByKeyParser o @ (Aeson.Object m)
     = Left $ unexpectedJSONValue o
 
 
-fromJSON' v = case fromJSON v of
+fromJSON' json = case fromJSON json of
   Aeson.Success z -> Right $ z
-  Aeson.Error s -> Left $ fromString $ s
+  Aeson.Error s -> Left $ "fromJSON failed with a message `" 
+    ++ fromString s 
+    ++ "` on the following value: " 
+    ++ (Text.toStrict . decodeUtf8 $ Aeson.encode json) 
 
-unexpectedJSONValue o
-  = "Unexpected JSON value: " ++ (Text.toStrict . decodeUtf8 $ Aeson.encode o)
+unexpectedJSONValue json = 
+  "Unexpected JSON value: " ++ (Text.toStrict . decodeUtf8 $ Aeson.encode json)
 
 o .? k = pure o ?.? k
 o ?.? k = o >>= objectKey k

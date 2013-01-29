@@ -24,23 +24,15 @@ class (MonadBaseControl IO m, MonadResource m, MonadReader (ConnectionSettings, 
 
 instance (MonadResource m, MonadBaseControl IO m) => MonadAction (ReaderT (ConnectionSettings, Manager) m) 
 
-responseAction
-  :: (MonadAction m) 
+generateRequest :: (MonadAction m) 
   => Method
   -> Maybe [Text]
   -> [CC.CouchQP]
   -> LByteString
-  -> m (Response (ResumableSource m ByteString))
-responseAction method dbPath qps body = do
-  (settings, manager) <- ask
-  let request = settingsRequest settings
-  logM 0 $ "Performing a " 
-    ++ show method ++ " at " 
-    ++ show (HTTP.url request)
-  retrying exceptionIntervals $
-    (flip catch) handleIOException $
-      (flip catch) handleHttpException $ 
-        http request manager
+  -> m (Request m)
+generateRequest method dbPath qps body = do
+  (settings, _) <- ask
+  return $ settingsRequest settings
   where
     headers = [("Content-Type", "application/json")]
     query = renderQuery False $ CC.mkQuery qps
@@ -63,6 +55,23 @@ responseAction method dbPath qps body = do
     checkStatus status@(Status code message) headers
       | elem code [200, 201, 202, 304] = Nothing
       | otherwise = Just $ SomeException $ StatusCodeException status headers
+
+performRequest :: (MonadAction m) 
+  => Request m
+  -> m (Response (ResumableSource m ByteString))
+performRequest request = do
+  logM 0 $ "Performing a " 
+    ++ show (HTTP.method request) 
+    ++ " at " ++ show (HTTP.url request)
+  (_, manager) <- ask
+  retrying exceptionIntervals $
+    (flip catch) handleIOException $
+      (flip catch) handleHttpException $ 
+        http request manager
+  where
+    checkStatus status@(Status code message) headers
+      | elem code [200, 201, 202, 304] = Nothing
+      | otherwise = Just $ SomeException $ StatusCodeException status headers
     exceptionIntervals (ConnectionException {}) = [10^3, 10^6, 10^6*10]
     exceptionIntervals _ = []
     handleHttpException e = case e of
@@ -72,13 +81,18 @@ responseAction method dbPath qps body = do
     handleIOException e = throwIO $ ConnectionException $ 
       "IOError: " ++ pack (ioeGetErrorString e)
 
-action method path qps body = do
-  body <- responseBody <$> responseAction method (Just path) qps body 
-  body $$+- Atto.sinkParser Aeson.json
+getResponseHeaders method path qps body = do
+  response <- performRequest =<< generateRequest method path qps body 
+  responseBody response $$+- sinkNull
+  return $ responseHeaders response
 
-putAction = action HTTP.methodPut
-postAction = action HTTP.methodPost
-getAction = action HTTP.methodGet
+getResponseJSON method path qps body = do
+  response <- performRequest =<< generateRequest method path qps body 
+  responseBody response $$+- Atto.sinkParser Aeson.json
+
+putAction path = getResponseJSON HTTP.methodPut (Just path)
+postAction path = getResponseJSON HTTP.methodPost (Just path)
+getAction path = getResponseJSON HTTP.methodGet (Just path)
 
 runWithManager manager settings action = 
   runReaderT action (settings, manager)
