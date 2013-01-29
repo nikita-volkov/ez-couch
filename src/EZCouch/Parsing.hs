@@ -4,8 +4,8 @@ module EZCouch.Parsing where
 
 import Prelude ()
 import ClassyPrelude.Conduit
-import Data.Text.Lazy (toStrict)
-import Data.Traversable (sequence)
+import qualified Data.Text.Lazy as Text
+import qualified Control.Monad as Monad
 import EZCouch.Types
 import Data.Aeson as Aeson 
 import qualified Data.Conduit.Util as Conduit
@@ -19,7 +19,7 @@ import qualified Data.Vector.Fusion.Stream as Stream
 parse rowsSink parser response = do
   rows <- response $$+- rowsSink
   result <- rows $= map parser $$ consume
-  either (monadThrow . ParsingException) return $ sequence result
+  either (monadThrow . ParsingException) return $ Monad.sequence result
 
 parseSingleRow parser response = do
   row <- response $$+- singleRowSink
@@ -132,7 +132,7 @@ fromJSON' v = case fromJSON v of
   Aeson.Error s -> Left $ fromString $ s
 
 unexpectedRowValueText o
-  = "Unexpected row value: " ++ (toStrict . decodeUtf8 $ Aeson.encode o)
+  = "Unexpected row value: " ++ (Text.toStrict . decodeUtf8 $ Aeson.encode o)
 
 o .? k = pure o ?.? k
 o ?.? k = o >>= objectKey k
