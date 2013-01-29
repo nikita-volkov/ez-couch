@@ -1,59 +1,35 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts #-}
 module EZCouch.Parsing where
 
 import Prelude ()
-import ClassyPrelude.Conduit
+import ClassyPrelude
+import Control.Monad.Trans.Resource
 import qualified Data.Text.Lazy as Text
 import EZCouch.Types
 import Data.Aeson as Aeson 
-import qualified Data.Conduit.Util as Conduit
-import qualified Data.Conduit.Attoparsec as Atto
-import qualified Data.Attoparsec as Atto
 
-import qualified Data.Vector.Generic as GVector
-import qualified Data.Vector.Fusion.Stream as Stream
+type Parser a = Aeson.Value -> Either Text a
+type RowsParser = Parser (Vector Aeson.Value)
 
+parseResponse toRowsParser toValueParser response = 
+  either (throwIO . ParsingException) return $ 
+    toRowsParser response >>= mapM toValueParser . toList
 
-parse rowsSink parser response = do
-  rows <- response $$+- rowsSink
-  result <- rows $= map parser $$ consume
-  either (monadThrow . ParsingException) return $ sequence result
+runParser parser response = 
+  either (throwIO . ParsingException) return $ parser response
 
-parseSingleRow parser response = do
-  row <- response $$+- singleRowSink
-  either (monadThrow . ParsingException) return $ parser row
+rowsParser1 :: Parser (Vector Aeson.Value)
+rowsParser1 json
+  | Just (Aeson.Array rows) <- json .? "rows" = Right rows
+  | otherwise = Left $ unexpectedJSONValue json
 
-singleRowSink :: MonadResource m => Sink ByteString m Aeson.Value
-singleRowSink = Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON")
+rowsParser2 :: Parser (Vector Aeson.Value)
+rowsParser2 json
+  | Aeson.Array rows <- json = Right rows
+  | otherwise = Left $ unexpectedJSONValue json
 
-multipleRowsSink1 :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
-multipleRowsSink1 = do 
-  o <- Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON")
-  rows <- case o of
-    Aeson.Object raw' -> case lookup "rows" raw' of
-      Just (Aeson.Array r) -> return r
-      _ -> return GVector.empty
-    _ -> monadThrow $ ParsingException "Not an Object"
-  return $ vectorSource rows
-
-multipleRowsSink2 :: MonadResource m => Sink ByteString m (Source m Aeson.Value)
-multipleRowsSink2 = do 
-  Atto.sinkParser (Aeson.json Atto.<?> "Invalid JSON") >>= \r -> case r of
-    Aeson.Array rows -> return $ vectorSource rows 
-    _ -> monadThrow $ ParsingException "Not an Array"
-
-vectorSource :: (Monad m, GVector.Vector v a) => v a -> Source m a
-vectorSource vec = Conduit.sourceState (GVector.stream vec) f
-  where f stream | Stream.null stream = return Conduit.StateClosed
-                 | otherwise = return $ Conduit.StateOpen 
-                      (Stream.tail stream) (Stream.head stream)
-
-
-type RowParser a = Aeson.Value -> Either Text a
-
-idRevRowParser :: RowParser (Text, Maybe Text)
-idRevRowParser o @ (Aeson.Object m) 
+idRevParser :: Parser (Text, Maybe Text)
+idRevParser o @ (Aeson.Object m) 
   | Just rev <- lookup "rev" m,
     Just id <- lookup "id" m
     = (,) <$> fromJSON' id <*> (Just <$> fromJSON' rev)
@@ -62,10 +38,10 @@ idRevRowParser o @ (Aeson.Object m)
     Just id <- lookup "id" m
     = (,) <$> fromJSON' id <*> pure Nothing
   | otherwise
-    = Left $ unexpectedRowValueText o
+    = Left $ unexpectedJSONValue o
 
-keyExistsRowParser :: (FromJSON k) => RowParser (k, Bool)
-keyExistsRowParser o @ (Aeson.Object m) 
+keyExistsParser :: (FromJSON k) => Parser (k, Bool)
+keyExistsParser o @ (Aeson.Object m) 
   | Just "not_found" <- lookup "error" m,
     Just key <- lookup "key" m
     = (,) <$> fromJSON' key <*> pure False
@@ -78,10 +54,10 @@ keyExistsRowParser o @ (Aeson.Object m)
     Just key <- lookup "key" m
     = (,) <$> fromJSON' key <*> pure True
   | otherwise
-    = Left $ unexpectedRowValueText o
+    = Left $ unexpectedJSONValue o
 
-persistedRowParser :: (FromJSON a) => RowParser (Maybe (Persisted a))
-persistedRowParser o
+persistedParser :: (FromJSON a) => Parser (Maybe (Persisted a))
+persistedParser o
   | Just (Aeson.Bool True) <- o .? "value" ?.? "deleted"
     = Right Nothing
   | Just id <- o .? "id", 
@@ -89,9 +65,9 @@ persistedRowParser o
     Just rev <- doc .? "_rev"
     = fmap Just $ Persisted <$> fromJSON' id <*> fromJSON' rev <*> fromJSON' doc
   | otherwise
-    = Left $ unexpectedRowValueText o
+    = Left $ unexpectedJSONValue o
 
-errorPersistedParser :: (FromJSON a) => RowParser (Either (Text, Text) (Persisted a))
+errorPersistedParser :: (FromJSON a) => Parser (Either (Text, Text) (Persisted a))
 errorPersistedParser o @ (Aeson.Object m) 
   | Just id <- lookup "_id" m,
     Just rev <- lookup "_rev" m
@@ -99,10 +75,10 @@ errorPersistedParser o @ (Aeson.Object m)
   | Just error <- lookup "error" m, Just reason <- lookup "reason" m
     = fmap Left $ (,) <$> fromJSON' error <*> fromJSON' reason 
   | otherwise
-    = Left $ unexpectedRowValueText o
+    = Left $ unexpectedJSONValue o
 
-maybePersistedByKeyRowParser :: (FromJSON a, FromJSON k) => RowParser (k, Maybe (Persisted a))
-maybePersistedByKeyRowParser o @ (Aeson.Object m) 
+maybePersistedByKeyParser :: (FromJSON a, FromJSON k) => Parser (k, Maybe (Persisted a))
+maybePersistedByKeyParser o @ (Aeson.Object m) 
   -- deleted
   | Just id <- lookup "id" m,
     Just (Aeson.Object valueM) <- lookup "value" m,
@@ -123,15 +99,15 @@ maybePersistedByKeyRowParser o @ (Aeson.Object m)
     Just key <- lookup "key" m
     = (,) <$> fromJSON' key <*> pure Nothing
   | otherwise
-    = Left $ unexpectedRowValueText o
+    = Left $ unexpectedJSONValue o
 
 
 fromJSON' v = case fromJSON v of
   Aeson.Success z -> Right $ z
   Aeson.Error s -> Left $ fromString $ s
 
-unexpectedRowValueText o
-  = "Unexpected row value: " ++ (Text.toStrict . decodeUtf8 $ Aeson.encode o)
+unexpectedJSONValue o
+  = "Unexpected JSON value: " ++ (Text.toStrict . decodeUtf8 $ Aeson.encode o)
 
 o .? k = pure o ?.? k
 o ?.? k = o >>= objectKey k

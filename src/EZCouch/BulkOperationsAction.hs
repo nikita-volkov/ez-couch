@@ -3,7 +3,6 @@ module EZCouch.BulkOperationsAction where
 
 import Prelude ()
 import ClassyPrelude.Conduit hiding (log)
-import Control.Monad (join)
 import Control.Monad.Trans.Resource
 import EZCouch.Ids 
 import EZCouch.Action
@@ -25,7 +24,7 @@ bulkOperationsAction :: (MonadAction m, Doc a)
   -- ^ Maybe rev by id. Nothing on failure.
 bulkOperationsAction ops = do
   response <- postAction path qps body
-  Parsing.parse Parsing.multipleRowsSink2 Parsing.idRevRowParser response
+  Parsing.parseResponse Parsing.rowsParser2 Parsing.idRevParser response
   where
     path = ["_bulk_docs"]
     qps = []
