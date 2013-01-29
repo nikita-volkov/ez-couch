@@ -2,7 +2,7 @@
 module EZCouch.WriteAction where
 
 import Prelude ()
-import ClassyPrelude.Conduit hiding (log)
+import ClassyPrelude.Conduit
 import Control.Monad.Trans.Resource
 import EZCouch.Ids 
 import EZCouch.Action

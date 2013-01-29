@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor, DeriveGeneric #-}
 import Prelude ()
-import ClassyPrelude hiding (log)
+import ClassyPrelude
 import Control.Monad
 import Data.Time
 import Data.Aeson
@@ -11,7 +11,7 @@ import Util.PrettyPrint
 import qualified Util.Logging as Logging
 import Debug.Trace
 
-log lvl = Logging.log "test" lvl
+logM lvl = Logging.logM lvl "test"
 
 connection = ConnectionSettings {
   connectionSettingsHost = "mojojojo.cloudant.com",
@@ -33,9 +33,9 @@ generateEntity = do
   return $ A time Nothing
 
 purge = do
-  log 0 "Purging"
+  logM 0 "Purging"
   as :: [Persisted A] <- readMultiple readOptions
-  log 1 "Purged " ++ (show $ length $ as)
+  logM 1 "Purged " ++ (show $ length $ as)
   deleteMultiple as
 
 testConnectionAlive i = trace (show i) $ if i > 0

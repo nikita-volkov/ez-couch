@@ -8,16 +8,16 @@ import System.Log.Logger as Logger
 import System.Log 
 import System.Log.Handler 
 import System.Log.Formatter
-import System.Log.Handler.Simple hiding (formatter)
+import System.Log.Handler.Simple hiding (formatter) 
 import System.IO
 
 import System.Locale (defaultTimeLocale)
 import Data.Time (getZonedTime, getCurrentTime, formatTime)
 import Control.Concurrent (myThreadId)
 
-log :: (MonadIO m) => Text -> Int -> Text -> m ()
-log logger level message = liftIO $ 
-  logM (unpack logger) (levelPriority level) (unpack message)
+logM :: (MonadIO m) => Int -> Text -> Text -> m ()
+logM level logger message = liftIO $ 
+  Logger.logM (unpack logger) (levelPriority level) (unpack message)
 
 initialize = initializeWithFormat "$level $time, $logger: $message"
 

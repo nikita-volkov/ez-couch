@@ -2,7 +2,7 @@
 module EZCouch.Action where
 
 import Prelude ()
-import ClassyPrelude.Conduit hiding (log)
+import ClassyPrelude.Conduit
 import Control.Exception (SomeException(..))
 import Control.Monad.Reader
 import Control.Retry
@@ -17,7 +17,7 @@ import qualified Util.Logging as Logging
 import qualified Data.Aeson as Aeson
 import qualified Data.Conduit.Attoparsec as Atto
 
-log lvl = Logging.log "EZCouch.Action" lvl
+logM lvl = Logging.logM lvl "EZCouch.Action"
 
 -- | All EZCouch operations are performed in this monad.
 class (MonadBaseControl IO m, MonadResource m, MonadReader (ConnectionSettings, Manager) m) => MonadAction m where
@@ -35,7 +35,7 @@ responseAction method dbPath qps body
   = do
       (settings, manager) <- ask
       let request = settingsRequest settings
-      log 0 $ "Performing a " 
+      logM 0 $ "Performing a " 
         ++ show method ++ " at " 
         ++ show (HTTP.url request)
       retrying exceptionIntervals $

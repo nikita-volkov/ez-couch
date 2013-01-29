@@ -2,19 +2,19 @@
 module EZCouch.Isolation where
 
 import Prelude ()
-import ClassyPrelude hiding (delete, log)
+import ClassyPrelude hiding (delete)
 import qualified Data.Time as Time
 
 import EZCouch.Time
 import EZCouch.Types
-import EZCouch.Action hiding (log)
+import EZCouch.Action hiding (logM)
 import EZCouch.ReadAction
 import EZCouch.WriteAction
 import EZCouch.Model.Isolation as Isolation
 
 import qualified Util.Logging as Logging
 
-log lvl = Logging.log "EZCouch.Isolation" lvl
+logM lvl = Logging.logM lvl "EZCouch.Isolation"
 
 -- | Protect an action from being executed on multiple clients. Can be used to create transactions in a preemptive manner, i.e. instead of performing some actions and rolling back on transaction validation failure it does validation based on the provided identifier prior to actually executing the transaction. This function however does not provide you with atomicity guarantees (<http://en.wikipedia.org/wiki/Atomicity_(database_systems)>), as it does not rollback in case of client-interrupt - it's up to your algorithms to handle those cases.
 isolate :: MonadAction m 
@@ -32,18 +32,18 @@ isolate timeout id action = do
         Just isolation -> do
           if (Isolation.since . persistedValue) isolation < Time.addUTCTime (negate $ fromIntegral timeout) time
             then do 
-              log 0 $ "Deleting outdated isolation: " ++ id'
+              logM 0 $ "Deleting outdated isolation: " ++ id'
               tryToDelete isolation
               isolate timeout id action
             else do
-              log 0 $ "Skipping a busy isolation: " ++ id'
+              logM 0 $ "Skipping a busy isolation: " ++ id'
               return Nothing
         Nothing -> do
-          log 0 $ "Skipping a finished isolation: " ++ id'
+          logM 0 $ "Skipping a finished isolation: " ++ id'
           return Nothing
     Left e -> throwIO e
     Right isolation -> do
-      log 0 $ "Performing an isolation: " ++ id'
+      logM 0 $ "Performing an isolation: " ++ id'
       finally (Just <$> action) (delete isolation)
   where 
     id' = "EZCouchIsolation-" ++ id
