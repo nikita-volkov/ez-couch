@@ -14,7 +14,7 @@ library
                     Database.CouchDB.Conduit.View.Query
                     EZCouch.Doc
                     EZCouch.Action
-                    EZCouch.BulkOperationsAction
+                    EZCouch.WriteAction
                     EZCouch.Design
                     EZCouch.Encoding
                     EZCouch.Ids

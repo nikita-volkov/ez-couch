@@ -6,7 +6,7 @@ import ClassyPrelude.Conduit
 
 import EZCouch.Action
 import EZCouch.Types
-import EZCouch.BulkOperationsAction
+import EZCouch.WriteAction
 
 -- | Return `Nothing` if an action throws an `OperationException` or `Just` its result otherwise.
 -- 

@@ -9,7 +9,7 @@ import EZCouch.Time
 import EZCouch.Types
 import EZCouch.Action hiding (log)
 import EZCouch.ReadAction
-import EZCouch.BulkOperationsAction
+import EZCouch.WriteAction
 import EZCouch.Model.Isolation as Isolation
 
 import qualified Util.Logging as Logging

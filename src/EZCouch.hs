@@ -58,7 +58,7 @@ module EZCouch (
 import EZCouch.Action
 import EZCouch.Types
 import EZCouch.ReadAction
-import EZCouch.BulkOperationsAction
+import EZCouch.WriteAction
 import EZCouch.View
 import EZCouch.Doc
 import EZCouch.Time

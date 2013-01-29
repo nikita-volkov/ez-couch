@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, ScopedTypeVariables, DeriveDataTypeable, DeriveFunctor #-}
-module EZCouch.BulkOperationsAction where
+module EZCouch.WriteAction where
 
 import Prelude ()
 import ClassyPrelude.Conduit hiding (log)
@@ -13,24 +13,24 @@ import qualified EZCouch.Encoding as Encoding
 import qualified Database.CouchDB.Conduit.View.Query as CC
 import Data.Aeson as Aeson
 
-data BulkOperation a
+data WriteOperation a
   = Create Text a
   | Update Text Text a
   | Delete Text Text
 
-bulkOperationsAction :: (MonadAction m, Doc a) 
-  => [BulkOperation a] 
+writeOperationsAction :: (MonadAction m, Doc a) 
+  => [WriteOperation a] 
   -> m [(Text, Maybe Text)]
   -- ^ Maybe rev by id. Nothing on failure.
-bulkOperationsAction ops =
+writeOperationsAction ops =
   postAction path qps body >>= 
     runParser (rowsParser2 >=> mapM idRevParser . toList)
   where
     path = ["_bulk_docs"]
     qps = []
-    body = bulkOperationsBody ops
+    body = writeOperationsBody ops
 
-bulkOperationsBody ops = Aeson.encode $ Aeson.object [("docs", Aeson.Array $ fromList $ map operationJSON ops)]
+writeOperationsBody ops = Aeson.encode $ Aeson.object [("docs", Aeson.Array $ fromList $ map operationJSON ops)]
 
 operationJSON (Create id a)
   = Encoding.insertPairs [("_id", toJSON id)] $ toJSON a
@@ -41,13 +41,13 @@ operationJSON (Delete id rev)
 
 deleteMultiple :: (MonadAction m, Doc a) => [Persisted a] -> m ()
 deleteMultiple vals = do
-  results <- bulkOperationsAction $ map toOperation vals
+  results <- writeOperationsAction $ map toOperation vals
   let failedIds = map fst $ filter (isNothing . snd) results
   if null failedIds
     then return ()
     else throwIO $ OperationException $ "Couldn't delete entities by following ids: " ++ show failedIds
   where
-    toOperation :: Persisted a -> BulkOperation a
+    toOperation :: Persisted a -> WriteOperation a
     toOperation (Persisted id rev val) = Delete id rev
 
 delete :: (MonadAction m, Doc a) => Persisted a -> m ()
@@ -57,7 +57,7 @@ createMultipleWithIds :: (MonadAction m, Doc a)
   => [(Text, a)] 
   -> m [Either (Text, a) (Persisted a)]
 createMultipleWithIds idsToVals 
-  = bulkOperationsAction [Create id val | (id, val) <- idsToVals]
+  = writeOperationsAction [Create id val | (id, val) <- idsToVals]
       >>= mapM convertResult
   where
     valById = asMap $ fromList idsToVals
@@ -99,7 +99,7 @@ create = return . singleton >=> createMultiple >=>
 
 updateMultiple :: (MonadAction m, Doc a) => [Persisted a] -> m [Persisted a]
 updateMultiple pVals
-  = bulkOperationsAction [Update id rev val | Persisted id rev val <- pVals]
+  = writeOperationsAction [Update id rev val | Persisted id rev val <- pVals]
       >>= mapM convertResult
   where
     valById = asMap $ fromList [(id, val) | Persisted id _ val <- pVals]

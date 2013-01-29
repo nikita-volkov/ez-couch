@@ -9,7 +9,7 @@ import EZCouch.Action
 import EZCouch.Doc
 import EZCouch.Types
 import EZCouch.Design 
-import EZCouch.BulkOperationsAction
+import EZCouch.WriteAction
 import qualified EZCouch.Model.Design as DesignModel
 import qualified EZCouch.Model.View as ViewModel
 

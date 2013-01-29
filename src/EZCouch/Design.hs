@@ -11,7 +11,7 @@ import qualified Network.HTTP.Conduit as HTTP
 
 import EZCouch.ReadAction
 import EZCouch.Action
-import EZCouch.BulkOperationsAction
+import EZCouch.WriteAction
 import EZCouch.Types
 import EZCouch.Parsing
 
