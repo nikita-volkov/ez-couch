@@ -28,8 +28,8 @@ createOrUpdateViewDesign mapV reduceV view
     viewModel = ViewModel.View mapV reduceV
 
 createOrUpdateView :: (Doc a, MonadAction m) 
-  => Text       -- ^ /map/-function
+  => View a     -- ^ view identifier
+  -> Text       -- ^ /map/-function
   -> Maybe Text -- ^ /reduce/-function
-  -> View a     -- ^ view identifier
   -> m ()
-createOrUpdateView map reduce view = void $ createOrUpdateViewDesign map reduce view
+createOrUpdateView view map reduce = void $ createOrUpdateViewDesign map reduce view
