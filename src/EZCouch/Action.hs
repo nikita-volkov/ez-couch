@@ -83,7 +83,7 @@ performRequest request = do
 
 getResponseHeaders method path qps body = do
   response <- performRequest =<< generateRequest method path qps body 
-  responseBody response $$+- sinkNull
+  responseBody response $$+- return ()
   return $ responseHeaders response
 
 getResponseJSON method path qps body = do
