@@ -9,10 +9,10 @@ module EZCouch (
   createMultiple,
   -- ** Reading 
   -- | All reading actions accept a `ReadOptions` parameter which specifies how filtering and ordering should go.
-  readOne,
-  readMultiple,
-  readExists,
-  readIds,
+  readEntities,
+  readRandomEntities,
+  readEntity,
+  readKeysExist,
   readKeys,
   readCount,
   -- ** Updating 
@@ -26,7 +26,6 @@ module EZCouch (
   readTime,
 
   -- * Working with Views
-  createOrUpdateView,  
 
   -- * Transactions
   -- | CouchDB doesn't provide a way to do traditional locking-based transactions, as it applies an Optimistic Concurrency Control strategy (<http://en.wikipedia.org/wiki/Optimistic_concurrency_control>). EZCouch approaches the issue by abstracting over it.
@@ -36,8 +35,6 @@ module EZCouch (
   Persisted(..),
   EZCouchException(..),
   View(..),
-  ReadOptions(..),
-  readOptions,
   ConnectionSettings(..),
   defaultPort,
 

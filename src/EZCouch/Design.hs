@@ -9,7 +9,6 @@ import Data.Aeson
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.HTTP.Conduit as HTTP
 
-import EZCouch.ReadAction
 import EZCouch.Action
 import EZCouch.WriteAction
 import EZCouch.Types

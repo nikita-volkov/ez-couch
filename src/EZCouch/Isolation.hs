@@ -10,6 +10,7 @@ import EZCouch.Types
 import EZCouch.Action hiding (logM)
 import EZCouch.ReadAction
 import EZCouch.WriteAction
+import EZCouch.View
 import EZCouch.Model.Isolation as Isolation
 
 import qualified Util.Logging as Logging
@@ -27,7 +28,7 @@ inIsolation timeout id action = do
   result <- (try $ createWithId id' $ Isolation time)
   case result of
     Left (OperationException _) -> do
-      isolation <- readOne $ readOptions { readOptionsKeys = Just [id'] }
+      isolation <- readEntity ViewAll (KeysReadModeList [id']) 0 False
       case isolation of
         Just isolation -> do
           if (Isolation.since . persistedValue) isolation < Time.addUTCTime (negate $ fromIntegral timeout) time
