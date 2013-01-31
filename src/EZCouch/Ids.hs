@@ -1,33 +1,20 @@
 module EZCouch.Ids (generateId) where
 
-import Data.Char
-import Data.IntMap (fromList, (!))
+import Prelude ()
+import ClassyPrelude
 import Data.Time.Clock.POSIX
 import System.Random
-import Control.Applicative
-
-chars = ['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z']
-charsLength = length chars
-charsMap = fromList $ zip [0..charsLength] chars
-
-encode = reverse . encode_
-  where
-    encode_ a 
-      | a < charsLength = charsMap ! a : []
-      | otherwise = charsMap ! c : encode_ b
-      where
-        b = div a charsLength 
-        c = mod a charsLength
+import EZCouch.Base62
 
 getPicos = getPOSIXTime >>= return . round . (* 1000000)
-getRndSuffix l = randomRIO (0, charsLength ^ l) >>= return . zeroPad l . encode
+getRndSuffix l = (randomRIO (0, charsLength ^ l) :: IO Word64) >>= 
+  return . zeroPad l . encodeUnsigned
   where 
     zeroPad l s = (replicate (l - length s) '0') ++ s  
 
-generateId = (++) <$> fmap encode getPicos <*> getRndSuffix 3 
+generateId = (++) <$> fmap encodeUnsigned getPicos <*> getRndSuffix 3 
 
 main = do
-  generateId >>= putStrLn 
-  generateId >>= putStrLn 
-  generateId >>= putStrLn 
-  generateId >>= putStrLn 
+  generateId >>= putStrLn . pack
+  generateId >>= putStrLn . pack
+  generateId >>= putStrLn . pack

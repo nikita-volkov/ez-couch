@@ -60,7 +60,8 @@ library
                     resourcet >= 0.3,
                     string-conversions >= 0.2,
                     classy-prelude >= 0.4.4,
-                    classy-prelude-conduit >= 0.4
+                    classy-prelude-conduit >= 0.4,
+                    vector 
 
 source-repository head
   type:             git
