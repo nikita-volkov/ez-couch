@@ -37,32 +37,26 @@ instance Hashable (ViewKey a) where
 
 
 data View entity keys where
-  -- | No specific view
   ViewAll 
     :: View entity Text
-  -- | A view which selects the entities by a single `ViewKey`
   ViewKeys1 
     :: ViewKey a 
     -> View entity a
-  -- | A view which selects the entities by a pair of `ViewKey`s
   ViewKeys2 
     :: ViewKey a 
     -> ViewKey b 
     -> View entity (a, b)
-  -- | A view which selects the entities by a triple of `ViewKey`s
   ViewKeys3 
     :: ViewKey a 
     -> ViewKey b 
     -> ViewKey c 
     -> View entity (a, b, c)
-  -- | ...
   ViewKeys4 
     :: ViewKey a 
     -> ViewKey b 
     -> ViewKey c 
     -> ViewKey d 
     -> View entity (a, b, c, d)
-  -- | ...
   ViewKeys5 
     :: ViewKey a 
     -> ViewKey b 
@@ -70,7 +64,6 @@ data View entity keys where
     -> ViewKey d 
     -> ViewKey e 
     -> View entity (a, b, c, d, e)
-  -- | ...
   ViewKeys6 
     :: ViewKey a 
     -> ViewKey b 
@@ -79,7 +72,6 @@ data View entity keys where
     -> ViewKey e 
     -> ViewKey f 
     -> View entity (a, b, c, d, e, f)
-  -- | ...
   ViewKeys7 
     :: ViewKey a 
     -> ViewKey b 
