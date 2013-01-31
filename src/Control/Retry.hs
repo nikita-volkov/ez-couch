@@ -1,37 +1,36 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE NoMonomorphismRestriction, OverloadedStrings #-}
 module Control.Retry where
 
-import Prelude hiding (catch)
-import Control.Exception.Lifted
+import Prelude ()
+import ClassyPrelude
 import Control.Concurrent
+import qualified Util.Logging as Logging
 
-import Control.Monad.Trans
-import Control.Monad
 
-import Data.Maybe
-
-retryEither [] action = action 
-retryEither (i:is) action = action >>= processResult
+retryingEither [] action = action 
+retryingEither (i:is) action = action >>= processResult
   where 
     processResult (Left _) 
-      | i == 0 = retryEither is action
-      | otherwise = liftIO (threadDelay i) >> retryEither is action
+      | i == 0 = retryingEither is action
+      | otherwise = liftIO (threadDelay i) >> retryingEither is action
     processResult r = return r
 
-retryEither' = retryEither defaultIntervals
+retryingEither' = retryingEither defaultIntervals
 
-retry exceptionIntervals action = retry_ 0
+retrying exceptionIntervals action = retrying_ 0
   where
-    retry_ attempt = catch action processException
+    retrying_ attempt = catch action processException
       where
-        exceptionInterval e = listToMaybe $ drop attempt $ exceptionIntervals e
+        exceptionInterval = listToMaybe . drop attempt . exceptionIntervals
         processException e 
-          | Just i <- exceptionInterval e
-          = unless (i == 0) (liftIO (threadDelay i)) >> 
-            retry_ (attempt + 1)
-          | otherwise = throw e
+          | Just i <- exceptionInterval e = do
+              Logging.logM 3 "Control.Retry"
+                $ "Error occurred: " ++ show e ++ ". " 
+                  ++ "Retrying with a " ++ show (i `div` sec) ++ "s delay."
+              unless (i == 0) (liftIO (threadDelay i)) 
+              retrying_ (attempt + 1)
+          | otherwise = throwIO e
 
-defaultIntervals = [second, second * 5, second * 15]
-  where 
-    second = 10 ^ 6
+defaultIntervals = [sec, sec * 5, sec * 15]
+sec = 10 ^ 6
 
