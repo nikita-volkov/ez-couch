@@ -4,7 +4,7 @@ module EZCouch.ReadAction where
 import Prelude ()
 import ClassyPrelude.Conduit
 import EZCouch.Action
-import EZCouch.Doc
+import EZCouch.Entity
 import EZCouch.Types
 import EZCouch.Parsing
 import EZCouch.View
@@ -26,7 +26,7 @@ data KeysSelection k
   deriving (Show, Eq)
 
 
-readAction :: (MonadAction m, Doc a, ToJSON k)
+readAction :: (MonadAction m, Entity a, ToJSON k)
   => View a k -- ^ View
   -> KeysSelection k -- ^ Keys selection mode
   -> Int -- ^ Skip
@@ -82,19 +82,19 @@ includeDocsQP True = Just CC.QPIncludeDocs
 includeDocsQP False = Nothing
 
 
-readKeys :: (MonadAction m, Doc a, ToJSON k, FromJSON k) 
+readKeys :: (MonadAction m, Entity a, ToJSON k, FromJSON k) 
   => View a k -- ^ View
   -> KeysSelection k -- ^ Keys selection mode
   -> m [k] 
 readKeys view mode = fmap (map fst . filter snd) $ readKeysExist view mode
 
-readCount :: (MonadAction m, Doc a, ToJSON k, FromJSON k)
+readCount :: (MonadAction m, Entity a, ToJSON k, FromJSON k)
   => View a k -- ^ View
   -> KeysSelection k -- ^ Keys selection mode
   -> m Int
 readCount view mode = fmap length $ readKeys view mode
 
-readKeysExist :: (MonadAction m, Doc a, ToJSON k, FromJSON k) 
+readKeysExist :: (MonadAction m, Entity a, ToJSON k, FromJSON k) 
   => View a k -- ^ View
   -> KeysSelection k -- ^ Keys selection mode
   -> m [(k, Bool)] 
@@ -103,7 +103,7 @@ readKeysExist view mode =
   readAction view mode 0 Nothing False False
     >>= runParser (rowsParser1 >=> mapM keyExistsParser . toList) 
 
-readEntities :: (MonadAction m, Doc a, ToJSON k)
+readEntities :: (MonadAction m, Entity a, ToJSON k)
   => View a k -- ^ View
   -> KeysSelection k -- ^ Keys selection mode
   -> Int -- ^ Skip
@@ -115,7 +115,7 @@ readEntities view mode skip limit desc =
     >>= runParser (rowsParser1 >=> mapM persistedParser . toList) 
     >>= return . catMaybes
 
-readEntity :: (MonadAction m, Doc a, ToJSON k)
+readEntity :: (MonadAction m, Entity a, ToJSON k)
   => View a k -- ^ View
   -> KeysSelection k -- ^ Keys selection mode
   -> Int -- ^ Skip
@@ -124,7 +124,7 @@ readEntity :: (MonadAction m, Doc a, ToJSON k)
 readEntity view mode skip desc = 
   listToMaybe <$> readEntities view mode skip (Just 1) desc
 
-readRandomEntities :: (MonadAction m, Doc a) 
+readRandomEntities :: (MonadAction m, Entity a) 
   => Maybe Int -- ^ Limit
   -> m [Persisted a]
 readRandomEntities limit = do

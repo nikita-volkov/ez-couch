@@ -7,7 +7,7 @@ import GHC.Generics
 import Data.Aeson
 import Data.Generics (Data, Typeable)
 import EZCouch.Action
-import EZCouch.Doc
+import EZCouch.Entity
 import EZCouch.Types
 import EZCouch.Design 
 import EZCouch.WriteAction
@@ -101,10 +101,10 @@ viewGeneratedName view = case view of
   ViewById -> Nothing
   view -> Just $ pack . Base62.encodeSigned64 . fromIntegral . hash $ view
 
-viewDocType :: (Doc a) => View a k -> Text
+viewDocType :: (Entity a) => View a k -> Text
 viewDocType = docType . (undefined :: View a k -> a)
 
-viewDesignName :: (Doc a) => View a k -> Maybe Text
+viewDesignName :: (Entity a) => View a k -> Maybe Text
 viewDesignName ViewById = Nothing
 viewDesignName view = docType . (undefined :: View a k -> a) <$> Just view
 
@@ -118,7 +118,7 @@ viewKeysJS view = case view of
   ViewByKeys6 a b c d e f -> Just $ toJS (a, b, c, d, e, f)
   ViewByKeys7 a b c d e f g -> Just $ toJS (a, b, c, d, e, f, g)
 
-viewMapFunctionJS :: (Doc a) => View a k -> Maybe Text
+viewMapFunctionJS :: (Entity a) => View a k -> Maybe Text
 viewMapFunctionJS view = fmap concat $ sequence [
     pure "function (doc) { if (doc._id.lastIndexOf('",
     viewDesignName view,
@@ -127,13 +127,13 @@ viewMapFunctionJS view = fmap concat $ sequence [
     pure ", null) }"
   ]
 
-viewPath :: (Doc a) => View a k -> [Text]
+viewPath :: (Entity a) => View a k -> [Text]
 viewPath view = case view of
   ViewById -> ["_all_docs"]
   _ -> ["_design", fromMaybe undefined $ viewDesignName view, 
         "_view", fromMaybe undefined $ viewGeneratedName view]
 
-createOrUpdateView :: (MonadAction m, Doc a) 
+createOrUpdateView :: (MonadAction m, Entity a) 
   => View a k 
   -> m (Persisted (DesignModel a))
 createOrUpdateView view

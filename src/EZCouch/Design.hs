@@ -4,7 +4,7 @@ module EZCouch.Design where
 import Prelude ()
 import ClassyPrelude
 import GHC.Generics
-import EZCouch.Doc
+import EZCouch.Entity
 import Data.Aeson
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.HTTP.Conduit as HTTP
@@ -20,7 +20,7 @@ import EZCouch.Model.View (View)
 import qualified EZCouch.Model.View as View
 
 
-readDesign :: (MonadAction m, Doc a) => m (Maybe (Persisted (Design a)))
+readDesign :: (MonadAction m, Entity a) => m (Maybe (Persisted (Design a)))
 readDesign = result
   where
     result = (flip catch) processException $ 
@@ -32,7 +32,7 @@ readDesign = result
         processException (HTTP.StatusCodeException (HTTP.Status 404 _) _) = return Nothing
         processException e = throwIO e
 
-createOrUpdateDesign :: (MonadAction m, Doc a) => Design a -> m (Persisted (Design a))
+createOrUpdateDesign :: (MonadAction m, Entity a) => Design a -> m (Persisted (Design a))
 createOrUpdateDesign design = 
   createDesign design `catch` \e -> case e of
     OperationException {} -> do
@@ -44,13 +44,13 @@ createOrUpdateDesign design =
         Nothing -> throwIO e
     _ -> throwIO e
 
-createDesign :: (MonadAction m, Doc a) => Design a -> m (Persisted (Design a))
+createDesign :: (MonadAction m, Entity a) => Design a -> m (Persisted (Design a))
 createDesign design = createEntityWithId id design
   where
     id = "_design/" ++ designName design
 
 
-updateDesignView :: (MonadAction m, Doc a)  
+updateDesignView :: (MonadAction m, Entity a)  
   => Persisted (Design a) -> Text -> View -> m (Persisted (Design a))
 updateDesignView 
   design@(Persisted designId designRev (Design viewsMap))
@@ -65,7 +65,7 @@ updateDesignView
   where 
     updateViewsMap = updateEntity . Persisted designId designRev . Design
 
-createOrUpdateDesignView :: (MonadAction m, Doc a)
+createOrUpdateDesignView :: (MonadAction m, Entity a)
   => Text -> View -> m (Persisted (Design a))
 createOrUpdateDesignView viewName view = 
   createDesign newDesign `catch` \e -> case e of

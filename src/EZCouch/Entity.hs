@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, FlexibleInstances, TypeSynonymInstances, DefaultSignatures, OverlappingInstances, TypeOperators, DeriveGeneric #-}
-module EZCouch.Doc where
+module EZCouch.Entity where
 
 import Prelude ()
 import ClassyPrelude 
@@ -7,7 +7,7 @@ import ClassyPrelude
 import GHC.Generics
 import Data.Aeson
 
-class (ToJSON a, FromJSON a) => Doc a where
+class (ToJSON a, FromJSON a) => Entity a where
   docType :: a -> Text
 
   default docType :: (Generic a, GDoc (Rep a)) => a -> Text
