@@ -30,7 +30,7 @@ writeOperationsAction ops =
     qps = []
     body = writeOperationsBody ops
 
-writeOperationsBody ops = Aeson.encode $ Aeson.object [("docs", Aeson.Array $ fromList $ map operationJSON ops)]
+writeOperationsBody ops = Aeson.encode $ Aeson.object [("docs", Aeson.Array $ fromList $ fmap operationJSON ops)]
 
 operationJSON (Create id a)
   = Encoding.insertPairs [("_id", toJSON id)] $ toJSON a
@@ -42,7 +42,7 @@ operationJSON (Delete id rev)
 deleteMultiple :: (MonadAction m, Doc a) => [Persisted a] -> m ()
 deleteMultiple vals = do
   results <- writeOperationsAction $ map toOperation vals
-  let failedIds = map fst $ filter (isNothing . snd) results
+  let failedIds = fmap fst $ filter (isNothing . snd) results
   if null failedIds
     then return ()
     else throwIO $ OperationException $ "Couldn't delete entities by following ids: " ++ show failedIds
