@@ -28,7 +28,7 @@ readDesign = result
         >>= runParser errorPersistedParser
         >>= return . either (const Nothing) Just
       where
-        designName = docType $ (undefined :: m (Maybe (Persisted (Design a))) -> a) result
+        designName = entityType $ (undefined :: m (Maybe (Persisted (Design a))) -> a) result
         processException (HTTP.StatusCodeException (HTTP.Status 404 _) _) = return Nothing
         processException e = throwIO e
 

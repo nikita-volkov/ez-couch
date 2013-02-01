@@ -102,11 +102,11 @@ viewGeneratedName view = case view of
   view -> Just $ pack . Base62.encodeSigned64 . fromIntegral . hash $ view
 
 viewDocType :: (Entity a) => View a k -> Text
-viewDocType = docType . (undefined :: View a k -> a)
+viewDocType = entityType . (undefined :: View a k -> a)
 
 viewDesignName :: (Entity a) => View a k -> Maybe Text
 viewDesignName ViewById = Nothing
-viewDesignName view = docType . (undefined :: View a k -> a) <$> Just view
+viewDesignName view = entityType . (undefined :: View a k -> a) <$> Just view
 
 viewKeysJS view = case view of
   ViewById -> Nothing

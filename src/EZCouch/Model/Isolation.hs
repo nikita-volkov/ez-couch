@@ -14,4 +14,4 @@ data Isolation
 instance ToJSON (Isolation)
 instance FromJSON (Isolation)
 instance Entity (Isolation) where
-  docType = const "EZCouchIsolation"
+  entityType = const "EZCouchIsolation"

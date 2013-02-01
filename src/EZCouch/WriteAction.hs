@@ -78,7 +78,7 @@ createEntities :: (MonadAction m, Entity a) => [a] -> m [Persisted a]
 createEntities = retry 10 
   where
     generateIdToVal val = do
-      id <- fmap ((docType val ++ "-") ++) $ fmap fromString generateId
+      id <- fmap ((entityType val ++ "-") ++) $ fmap fromString generateId
       return (id, val)
     retry attempts vals = do    
       idsToVals <- liftIO $ mapM generateIdToVal vals

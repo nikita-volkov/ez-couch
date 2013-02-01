@@ -17,4 +17,4 @@ instance ToJSON (Design a)
 instance FromJSON (Design a)
 instance (Entity a) => Entity (Design a)
 
-designName = docType . (undefined :: Design a -> a)
+designName = entityType . (undefined :: Design a -> a)

@@ -8,10 +8,10 @@ import GHC.Generics
 import Data.Aeson
 
 class (ToJSON a, FromJSON a) => Entity a where
-  docType :: a -> Text
+  entityType :: a -> Text
 
-  default docType :: (Generic a, GDoc (Rep a)) => a -> Text
-  docType = gDocType . from
+  default entityType :: (Generic a, GDoc (Rep a)) => a -> Text
+  entityType = gDocType . from
 
 class GDoc f where 
   gDocType :: f a -> Text
