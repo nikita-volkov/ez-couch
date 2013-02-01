@@ -12,6 +12,7 @@ import EZCouch.Doc
 import EZCouch.Types
 import EZCouch.Design 
 import EZCouch.WriteAction
+import qualified Control.Monad as Monad
 import qualified Data.Foldable as Foldable
 import qualified EZCouch.Model.Design as DesignModel
 import qualified EZCouch.Model.View as ViewModel
@@ -35,7 +36,7 @@ instance ToJS (ViewKey a) where
 instance Hashable (ViewKey a) where
   hash = hash . toJS
 
-
+-- TODO: rename ViewById and ViewByKeyN
 data View entity keys where
   ViewAll 
     :: View entity Text
@@ -144,33 +145,14 @@ viewPath view = case view of
 --     view :: View A (Text, Text)
 --     view = ViewKeys2 (ViewKeyRandom) (ViewKeyField "ab.sd.d")
       
-
--- queryView :: View entity keys -> QueryViewOptions -> Value
-
-
-
-
--- createOrUpdateViewDesign :: (Doc a, MonadAction m) => Text -> Maybe Text -> View a -> m (Persisted (DesignModel.Design a))
--- createOrUpdateViewDesign mapV reduceV view
---   = readDesign >>= maybe create update'
---   where
---     create = createDesign $ DesignModel.Design $ fromList [(viewGeneratedName view, viewModel)]
---     update' design@(Persisted id rev (DesignModel.Design viewsMap))
---       | Just viewModel' <- lookup viewGeneratedName' viewsMap
---         = if viewModel' == viewModel
---             then return design
---             else update $ Persisted id rev $ DesignModel.Design $ adjust (const $ viewModel) viewGeneratedName' viewsMap
---     viewGeneratedName' = viewGeneratedName view
---     viewModel = ViewModel.View mapV reduceV
-
--- createOrUpdateView :: (Doc a, MonadAction m) 
---   => View a     -- ^ view identifier
---   -> Text       -- ^ /map/-function
---   -> Maybe Text -- ^ /reduce/-function
---   -> m ()
--- createOrUpdateView view map reduce = void $ createOrUpdateViewDesign map reduce view
-
-
-
--- createOrUpdateView :: (MonadAction m) => View a k -> m ()
-
+createOrUpdateView :: (MonadAction m, Doc a) 
+  => View a k 
+  -> m (Persisted (DesignModel a))
+createOrUpdateView view
+  | Just name <- viewGeneratedName view,
+    Just model <- ViewModel.View <$> viewMapFunctionJS view <*> pure Nothing
+    = createOrUpdateDesignView name model
+  | otherwise = error "EZCouch.View.createOrUpdateView: Attempt to persist a view which does not support it"
+  -- = createOrUpdateDesignView 
+  --   <$> viewGeneratedName view 
+  --   <*> (ViewModel.View <$> viewMapFunctionJS view <*> pure Nothing)

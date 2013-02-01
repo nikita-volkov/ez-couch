@@ -12,6 +12,8 @@ import qualified EZCouch.Encoding as Encoding
 import qualified Database.CouchDB.Conduit.View.Query as CC
 import qualified System.Random as Random
 import qualified EZCouch.Base62 as Base62
+import qualified Network.HTTP.Conduit as HTTP
+import qualified Network.HTTP.Types as HTTP
 import Data.Aeson.Types
 
 
@@ -84,8 +86,14 @@ readAction :: (MonadAction m, Doc a, ToJSON k)
   -> Bool -- ^ Include docs
   -> m Value -- ^ An unparsed response body JSON
 readAction view mode skip limit desc includeDocs = 
-  action path qps body
-    -- `catch` handleViewFailure view
+  action path qps body `catch` \e -> case e of
+    -- OperationException {} -> do
+    HTTP.StatusCodeException (HTTP.Status code _) _ 
+      | code `elem` [404, 500] 
+      -> do
+        createOrUpdateView view 
+        action path qps body
+    _ -> throwIO e
   where
     action = case mode of
       KeysSelectionList {} -> postAction
@@ -124,21 +132,32 @@ readAction view mode skip limit desc includeDocs =
     -- docTypeQPs = case mode of
     --   KeysSelection {} -> []
 
-startKeyQP view mode = case view of
-  ViewAll -> case mode of
-    KeysSelectionRange {} -> Nothing
-    KeysSelectionRangeStart {} -> Nothing
-    KeysSelectionList {} -> Nothing
-    _ -> Just $ CC.QPStartKey $ viewDocType view ++ "-"
-  _ -> Nothing
 
-endKeyQP view mode = case view of
-  ViewAll -> case mode of
-    KeysSelectionRange {} -> Nothing
-    KeysSelectionRangeEnd {} -> Nothing
-    KeysSelectionList {} -> Nothing
-    _ -> Just $ CC.QPEndKey $ viewDocType view ++ "."
-  _ -> Nothing
+startKeyQP _ (KeysSelectionRange start end) = Just $ CC.QPStartKey start
+startKeyQP _ (KeysSelectionRangeStart start) = Just $ CC.QPStartKey start
+startKeyQP _ (KeysSelectionList {}) = Nothing
+startKeyQP view@ViewAll _ = Just $ CC.QPStartKey $ viewDocType view ++ "-"
+startKeyQP _ _ = Nothing
+-- startKeyQP view mode = case view of
+--   ViewAll -> case mode of
+--     KeysSelectionList {} -> Nothing
+--     KeysSelectionRange start end -> Just $ CC.QPStartKey start
+--     KeysSelectionRangeStart start -> Just $ CC.QPStartKey start
+--     _ -> Just $ CC.QPStartKey $ viewDocType view ++ "-"
+--   _ -> Nothing
+
+endKeyQP _ (KeysSelectionRange start end) = Just $ CC.QPEndKey end
+endKeyQP _ (KeysSelectionRangeEnd end) = Just $ CC.QPEndKey end
+endKeyQP _ (KeysSelectionList {}) = Nothing
+endKeyQP view@ViewAll _ = Just $ CC.QPEndKey $ viewDocType view ++ "."
+endKeyQP _ _ = Nothing
+-- endKeyQP view mode = case view of
+--   ViewAll -> case mode of
+--     KeysSelectionList {} -> Nothing
+--     KeysSelectionRange start end -> Just $ CC.QPEndKey end
+--     KeysSelectionRangeEnd end -> Just $ CC.QPEndKey end
+--     _ -> Just $ CC.QPEndKey $ viewDocType view ++ "."
+--   _ -> Nothing
 
 limitQP limit = CC.QPLimit <$> limit
 
@@ -148,8 +167,6 @@ descQP desc = if desc then Just CC.QPDescending else Nothing
 
 includeDocsQP True = Just CC.QPIncludeDocs
 includeDocsQP False = Nothing
-
-handleViewFailure view = undefined
 
 
 readKeys :: (MonadAction m, Doc a, ToJSON k, FromJSON k) 
