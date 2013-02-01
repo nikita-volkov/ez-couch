@@ -14,7 +14,7 @@ module EZCouch (
   readKeysExist,
   readKeys,
   readCount,
-  KeysReadMode(..),
+  KeysSelection(..),
   -- ** Updating 
   update,
   updateMultiple,

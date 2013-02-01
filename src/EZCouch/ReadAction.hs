@@ -37,12 +37,12 @@ import Data.Aeson.Types
 
 
 -- .. Selection mode
-data KeysReadMode k
-  = KeysReadModeAll
-  | KeysReadModeRange k k
-  | KeysReadModeRangeStart k
-  | KeysReadModeRangeEnd k
-  | KeysReadModeList [k]
+data KeysSelection k
+  = KeysSelectionAll
+  | KeysSelectionRange k k
+  | KeysSelectionRangeStart k
+  | KeysSelectionRangeEnd k
+  | KeysSelectionList [k]
   deriving (Show, Eq)
 
 -- data FetchingOption
@@ -77,7 +77,7 @@ data KeysReadMode k
 
 readAction :: (MonadAction m, Doc a, ToJSON k)
   => View a k -- ^ View
-  -> KeysReadMode k -- ^ Keys selection mode
+  -> KeysSelection k -- ^ Keys selection mode
   -> Int -- ^ Skip
   -> Maybe Int -- ^ Limit
   -> Bool -- ^ Descending
@@ -88,7 +88,7 @@ readAction view mode skip limit desc includeDocs =
     -- `catch` handleViewFailure view
   where
     action = case mode of
-      KeysReadModeList {} -> postAction
+      KeysSelectionList {} -> postAction
       _ -> getAction
     path = viewPath view
     qps = catMaybes [
@@ -100,7 +100,7 @@ readAction view mode skip limit desc includeDocs =
         skipQP skip
       ]
     body = case mode of 
-      KeysReadModeList keys -> Encoding.keysBody keys
+      KeysSelectionList keys -> Encoding.keysBody keys
       _ -> ""
 
     -- qps = case mode of
@@ -122,21 +122,21 @@ readAction view mode skip limit desc includeDocs =
     --     ]
 
     -- docTypeQPs = case mode of
-    --   KeysReadMode {} -> []
+    --   KeysSelection {} -> []
 
 startKeyQP view mode = case view of
   ViewAll -> case mode of
-    KeysReadModeRange {} -> Nothing
-    KeysReadModeRangeStart {} -> Nothing
-    KeysReadModeList {} -> Nothing
+    KeysSelectionRange {} -> Nothing
+    KeysSelectionRangeStart {} -> Nothing
+    KeysSelectionList {} -> Nothing
     _ -> Just $ CC.QPStartKey $ viewDocType view ++ "-"
   _ -> Nothing
 
 endKeyQP view mode = case view of
   ViewAll -> case mode of
-    KeysReadModeRange {} -> Nothing
-    KeysReadModeRangeEnd {} -> Nothing
-    KeysReadModeList {} -> Nothing
+    KeysSelectionRange {} -> Nothing
+    KeysSelectionRangeEnd {} -> Nothing
+    KeysSelectionList {} -> Nothing
     _ -> Just $ CC.QPEndKey $ viewDocType view ++ "."
   _ -> Nothing
 
@@ -154,19 +154,19 @@ handleViewFailure view = undefined
 
 readKeys :: (MonadAction m, Doc a, ToJSON k, FromJSON k) 
   => View a k -- ^ View
-  -> KeysReadMode k -- ^ Keys selection mode
+  -> KeysSelection k -- ^ Keys selection mode
   -> m [k] 
 readKeys view mode = fmap (map fst . filter snd) $ readKeysExist view mode
 
 readCount :: (MonadAction m, Doc a, ToJSON k, FromJSON k)
   => View a k -- ^ View
-  -> KeysReadMode k -- ^ Keys selection mode
+  -> KeysSelection k -- ^ Keys selection mode
   -> m Int
 readCount view mode = fmap length $ readKeys view mode
 
 readKeysExist :: (MonadAction m, Doc a, ToJSON k, FromJSON k) 
   => View a k -- ^ View
-  -> KeysReadMode k -- ^ Keys selection mode
+  -> KeysSelection k -- ^ Keys selection mode
   -> m [(k, Bool)] 
   -- ^ An associative list of `Bool` values by keys designating the existance of appropriate entities
 readKeysExist view mode =
@@ -175,7 +175,7 @@ readKeysExist view mode =
 
 readEntities :: (MonadAction m, Doc a, ToJSON k)
   => View a k -- ^ View
-  -> KeysReadMode k -- ^ Keys selection mode
+  -> KeysSelection k -- ^ Keys selection mode
   -> Int -- ^ Skip
   -> Maybe Int -- ^ Limit
   -> Bool -- ^ Descending
@@ -187,7 +187,7 @@ readEntities view mode skip limit desc =
 
 readEntity :: (MonadAction m, Doc a, ToJSON k)
   => View a k -- ^ View
-  -> KeysReadMode k -- ^ Keys selection mode
+  -> KeysSelection k -- ^ Keys selection mode
   -> Int -- ^ Skip
   -> Bool -- ^ Descending
   -> m (Maybe (Persisted a))
@@ -201,7 +201,7 @@ readRandomEntities limit = do
   startKey :: Double <- liftIO $ Random.randomRIO (0.0, 1.0)
   readEntities 
     (ViewKeys1 ViewKeyRandom) 
-    (KeysReadModeRangeStart startKey)
+    (KeysSelectionRangeStart startKey)
     0
     limit
     False
