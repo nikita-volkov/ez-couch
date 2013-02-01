@@ -21,7 +21,7 @@ library
   other-modules:    Control.Retry
                     Database.CouchDB.Conduit.View.Query
                     EZCouch.Base62
-                    EZCouch.Doc
+                    EZCouch.Entity
                     EZCouch.Action
                     EZCouch.WriteAction
                     EZCouch.Design

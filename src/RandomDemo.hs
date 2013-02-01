@@ -45,7 +45,7 @@ instance ToJSON A
 instance FromJSON A
 -- Generate an instance of EZCouch's typeclass which is required to be able
 -- to use the entity with db.
-instance Doc A
+instance Entity A
 
 -- Execute our program by running actions in the EZCouch's `MonadAction`.
 -- First we regenerate all the entities in the db and then subsequently fetch

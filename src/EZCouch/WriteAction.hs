@@ -7,7 +7,7 @@ import Control.Monad.Trans.Resource
 import EZCouch.Ids 
 import EZCouch.Action
 import EZCouch.Types
-import EZCouch.Doc
+import EZCouch.Entity
 import EZCouch.Parsing
 import qualified EZCouch.Encoding as Encoding
 import qualified Database.CouchDB.Conduit.View.Query as CC
@@ -18,7 +18,7 @@ data WriteOperation a
   | Update Text Text a
   | Delete Text Text
 
-writeOperationsAction :: (MonadAction m, Doc a) 
+writeOperationsAction :: (MonadAction m, Entity a) 
   => [WriteOperation a] 
   -> m [(Text, Maybe Text)]
   -- ^ Maybe rev by id. Nothing on failure.
@@ -39,7 +39,7 @@ operationJSON (Update id rev a)
 operationJSON (Delete id rev)
   = Aeson.object [("_id", toJSON id), ("_rev", toJSON rev), ("_deleted", Aeson.Bool True)] 
 
-deleteEntities :: (MonadAction m, Doc a) => [Persisted a] -> m ()
+deleteEntities :: (MonadAction m, Entity a) => [Persisted a] -> m ()
 deleteEntities vals = do
   results <- writeOperationsAction $ map toOperation vals
   let failedIds = fmap fst $ filter (isNothing . snd) results
@@ -50,10 +50,10 @@ deleteEntities vals = do
     toOperation :: Persisted a -> WriteOperation a
     toOperation (Persisted id rev val) = Delete id rev
 
-deleteEntity :: (MonadAction m, Doc a) => Persisted a -> m ()
+deleteEntity :: (MonadAction m, Entity a) => Persisted a -> m ()
 deleteEntity = deleteEntities . singleton
 
-createEntitiesWithIds :: (MonadAction m, Doc a) 
+createEntitiesWithIds :: (MonadAction m, Entity a) 
   => [(Text, a)] 
   -> m [Either (Text, a) (Persisted a)]
 createEntitiesWithIds idsToVals 
@@ -66,7 +66,7 @@ createEntitiesWithIds idsToVals
     convertResult (id, Just rev) = fmap Right $ 
       Persisted <$> pure id <*> pure rev <*> lookupThrowing id valById
 
-createEntityWithId :: (MonadAction m, Doc a)
+createEntityWithId :: (MonadAction m, Entity a)
   => Text
   -> a
   -> m (Persisted a)
@@ -74,11 +74,11 @@ createEntityWithId id val = createEntitiesWithIds [(id, val)]
   >>= return . join . fmap (either (const Nothing) Just) . listToMaybe 
   >>= maybe (throwIO $ OperationException "Failed to create entity") return
 
-createEntities :: (MonadAction m, Doc a) => [a] -> m [Persisted a]
+createEntities :: (MonadAction m, Entity a) => [a] -> m [Persisted a]
 createEntities = retry 10 
   where
     generateIdToVal val = do
-      id <- fmap ((docType val ++ "-") ++) $ fmap fromString generateId
+      id <- fmap ((entityType val ++ "-") ++) $ fmap fromString generateId
       return (id, val)
     retry attempts vals = do    
       idsToVals <- liftIO $ mapM generateIdToVal vals
@@ -93,11 +93,11 @@ createEntities = retry 10
         else
           throwIO $ OperationException $ "Failed to generate unique ids"
 
-createEntity :: (MonadAction m, Doc a) => a -> m (Persisted a)
+createEntity :: (MonadAction m, Entity a) => a -> m (Persisted a)
 createEntity = return . singleton >=> createEntities >=> 
   maybe (throwIO $ OperationException "Failed to create entity") return . listToMaybe
 
-updateEntities :: (MonadAction m, Doc a) => [Persisted a] -> m [Persisted a]
+updateEntities :: (MonadAction m, Entity a) => [Persisted a] -> m [Persisted a]
 updateEntities pVals
   = writeOperationsAction [Update id rev val | Persisted id rev val <- pVals]
       >>= mapM convertResult
@@ -106,7 +106,7 @@ updateEntities pVals
     convertResult (id, Nothing) = throwIO $ OperationException $ "Couldn't updateEntity all documents"
     convertResult (id, Just rev) = Persisted <$> pure id <*> pure rev <*> lookupThrowing id valById
 
-updateEntity :: (MonadAction m, Doc a) => Persisted a -> m (Persisted a)
+updateEntity :: (MonadAction m, Entity a) => Persisted a -> m (Persisted a)
 updateEntity = return . singleton >=> updateEntities >=> 
   maybe (throwIO $ OperationException "Failed to update entity") return . listToMaybe
     

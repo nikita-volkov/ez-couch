@@ -50,7 +50,7 @@ module EZCouch (
   EZCouchException(..),
 
   -- * Classes which records should implement
-  Doc(..),
+  Entity(..),
   -- ** Aeson re-exports
   ToJSON(..),
   FromJSON(..)
@@ -61,7 +61,7 @@ import EZCouch.Types
 import EZCouch.ReadAction
 import EZCouch.WriteAction
 import EZCouch.View
-import EZCouch.Doc
+import EZCouch.Entity
 import EZCouch.Time
 import EZCouch.Isolation
 import EZCouch.Try
