@@ -59,7 +59,7 @@ main = run connection $ do
 
 regenerateAs = do
   -- Fetch all existing entities of type `A`.
-  as :: [Persisted A] <- readEntities ViewAll KeysSelectionAll 0 Nothing False
+  as :: [Persisted A] <- readEntities ViewById KeysSelectionAll 0 Nothing False
   -- Delete them all.
   deleteMultiple as
   -- Create new ones.

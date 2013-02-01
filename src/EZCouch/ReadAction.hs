@@ -63,13 +63,13 @@ readAction view mode skip limit desc includeDocs =
 startKeyQP _ (KeysSelectionRange start end) = Just $ CC.QPStartKey start
 startKeyQP _ (KeysSelectionRangeStart start) = Just $ CC.QPStartKey start
 startKeyQP _ (KeysSelectionList {}) = Nothing
-startKeyQP view@ViewAll _ = Just $ CC.QPStartKey $ viewDocType view ++ "-"
+startKeyQP view@ViewById _ = Just $ CC.QPStartKey $ viewDocType view ++ "-"
 startKeyQP _ _ = Nothing
 
 endKeyQP _ (KeysSelectionRange start end) = Just $ CC.QPEndKey end
 endKeyQP _ (KeysSelectionRangeEnd end) = Just $ CC.QPEndKey end
 endKeyQP _ (KeysSelectionList {}) = Nothing
-endKeyQP view@ViewAll _ = Just $ CC.QPEndKey $ viewDocType view ++ "."
+endKeyQP view@ViewById _ = Just $ CC.QPEndKey $ viewDocType view ++ "."
 endKeyQP _ _ = Nothing
 
 limitQP limit = CC.QPLimit <$> limit
@@ -130,7 +130,7 @@ readRandomEntities :: (MonadAction m, Doc a)
 readRandomEntities limit = do
   startKey :: Double <- liftIO $ Random.randomRIO (0.0, 1.0)
   readEntities 
-    (ViewKeys1 ViewKeyRandom) 
+    (ViewByKeys1 ViewKeyRandom) 
     (KeysSelectionRangeStart startKey)
     0
     limit

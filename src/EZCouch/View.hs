@@ -37,34 +37,34 @@ instance Hashable (ViewKey a) where
 
 -- TODO: rename ViewById and ViewByKeyN
 data View entity keys where
-  ViewAll 
+  ViewById 
     :: View entity Text
-  ViewKeys1 
+  ViewByKeys1 
     :: ViewKey a 
     -> View entity a
-  ViewKeys2 
+  ViewByKeys2 
     :: ViewKey a 
     -> ViewKey b 
     -> View entity (a, b)
-  ViewKeys3 
+  ViewByKeys3 
     :: ViewKey a 
     -> ViewKey b 
     -> ViewKey c 
     -> View entity (a, b, c)
-  ViewKeys4 
+  ViewByKeys4 
     :: ViewKey a 
     -> ViewKey b 
     -> ViewKey c 
     -> ViewKey d 
     -> View entity (a, b, c, d)
-  ViewKeys5 
+  ViewByKeys5 
     :: ViewKey a 
     -> ViewKey b 
     -> ViewKey c 
     -> ViewKey d 
     -> ViewKey e 
     -> View entity (a, b, c, d, e)
-  ViewKeys6 
+  ViewByKeys6 
     :: ViewKey a 
     -> ViewKey b 
     -> ViewKey c 
@@ -72,7 +72,7 @@ data View entity keys where
     -> ViewKey e 
     -> ViewKey f 
     -> View entity (a, b, c, d, e, f)
-  ViewKeys7 
+  ViewByKeys7 
     :: ViewKey a 
     -> ViewKey b 
     -> ViewKey c 
@@ -86,37 +86,37 @@ deriving instance Show (View entity keys)
 deriving instance Eq (View entity keys)
 instance Hashable (View entity keys) where
   hash view = case view of
-    ViewAll -> 0
-    ViewKeys1 a -> hash a
-    ViewKeys2 a b -> hash (a, b)
-    ViewKeys3 a b c -> hash (a, b, c)
-    ViewKeys4 a b c d -> hash (a, b, c, d)
-    ViewKeys5 a b c d e -> hash (a, b, c, d, e)
-    ViewKeys6 a b c d e f -> hash (a, b, c, d, e, f)
-    ViewKeys7 a b c d e f g -> hash (a, b, c, d, e, f, g)
+    ViewById -> 0
+    ViewByKeys1 a -> hash a
+    ViewByKeys2 a b -> hash (a, b)
+    ViewByKeys3 a b c -> hash (a, b, c)
+    ViewByKeys4 a b c d -> hash (a, b, c, d)
+    ViewByKeys5 a b c d e -> hash (a, b, c, d, e)
+    ViewByKeys6 a b c d e f -> hash (a, b, c, d, e, f)
+    ViewByKeys7 a b c d e f g -> hash (a, b, c, d, e, f, g)
 
 
 viewGeneratedName :: View a k -> Maybe Text
 viewGeneratedName view = case view of
-  ViewAll -> Nothing
+  ViewById -> Nothing
   view -> Just $ pack . Base62.encodeSigned64 . fromIntegral . hash $ view
 
 viewDocType :: (Doc a) => View a k -> Text
 viewDocType = docType . (undefined :: View a k -> a)
 
 viewDesignName :: (Doc a) => View a k -> Maybe Text
-viewDesignName ViewAll = Nothing
+viewDesignName ViewById = Nothing
 viewDesignName view = docType . (undefined :: View a k -> a) <$> Just view
 
 viewKeysJS view = case view of
-  ViewAll -> Nothing
-  ViewKeys1 a -> Just $ toJS a
-  ViewKeys2 a b -> Just $ toJS (a, b)
-  ViewKeys3 a b c -> Just $ toJS (a, b, c)
-  ViewKeys4 a b c d -> Just $ toJS (a, b, c, d)
-  ViewKeys5 a b c d e -> Just $ toJS (a, b, c, d, e)
-  ViewKeys6 a b c d e f -> Just $ toJS (a, b, c, d, e, f)
-  ViewKeys7 a b c d e f g -> Just $ toJS (a, b, c, d, e, f, g)
+  ViewById -> Nothing
+  ViewByKeys1 a -> Just $ toJS a
+  ViewByKeys2 a b -> Just $ toJS (a, b)
+  ViewByKeys3 a b c -> Just $ toJS (a, b, c)
+  ViewByKeys4 a b c d -> Just $ toJS (a, b, c, d)
+  ViewByKeys5 a b c d e -> Just $ toJS (a, b, c, d, e)
+  ViewByKeys6 a b c d e f -> Just $ toJS (a, b, c, d, e, f)
+  ViewByKeys7 a b c d e f g -> Just $ toJS (a, b, c, d, e, f, g)
 
 viewMapFunctionJS :: (Doc a) => View a k -> Maybe Text
 viewMapFunctionJS view = fmap concat $ sequence [
@@ -129,7 +129,7 @@ viewMapFunctionJS view = fmap concat $ sequence [
 
 viewPath :: (Doc a) => View a k -> [Text]
 viewPath view = case view of
-  ViewAll -> ["_all_docs"]
+  ViewById -> ["_all_docs"]
   _ -> ["_design", fromMaybe undefined $ viewDesignName view, 
         "_view", fromMaybe undefined $ viewGeneratedName view]
 
