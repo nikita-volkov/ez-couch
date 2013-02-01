@@ -106,9 +106,4 @@ putAction path = getResponseJSON HTTP.methodPut (Just path)
 postAction path = getResponseJSON HTTP.methodPost (Just path)
 getAction path = getResponseJSON HTTP.methodGet (Just path)
 
-runWithManager manager settings action = 
-  runReaderT action (settings, manager)
-run settings action = HTTP.withManager $ \manager -> 
-  runWithManager manager settings action
-
 packPath = Blaze.toByteString . HTTP.encodePathSegments . filter (/="")

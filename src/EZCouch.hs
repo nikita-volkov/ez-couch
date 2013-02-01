@@ -32,7 +32,8 @@ module EZCouch (
   -- * Transactions
   -- | CouchDB doesn't provide a way to do traditional locking-based transactions, as it applies an Optimistic Concurrency Control strategy (<http://en.wikipedia.org/wiki/Optimistic_concurrency_control>). EZCouch approaches the issue by abstracting over it.
   inIsolation,
-
+  isolateEntity,
+  Isolation(..),
   -- * Types
   Persisted(..),
 
@@ -54,6 +55,9 @@ module EZCouch (
   FromJSON(..)
 ) where
 
+import Prelude ()
+import ClassyPrelude
+
 import EZCouch.Action
 import EZCouch.Types
 import EZCouch.ReadAction
@@ -63,4 +67,19 @@ import EZCouch.Entity
 import EZCouch.Time
 import EZCouch.Isolation
 import EZCouch.Try
+import EZCouch.EntityIsolation
+import EZCouch.Sweeper
 import Data.Aeson
+
+import Control.Monad.Reader
+import Control.Monad.Trans.Resource
+import qualified Network.HTTP.Conduit as HTTP
+
+runWithManager manager settings action = 
+  flip runReaderT (settings, manager) $ runResourceT $ do
+    resourceForkIO $ lift $ runSweeper
+    lift $ action
+
+run settings action = HTTP.withManager $ \manager -> 
+  runWithManager manager settings action
+

@@ -1,14 +1,27 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 module EZCouch.Types where
 
 import Prelude ()
 import ClassyPrelude 
 import Data.Generics (Data, Typeable)
+import Data.Aeson
+import GHC.Generics
 
 data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persistedEntity :: a }
-  deriving (Show, Data, Typeable, Eq, Ord)
+  deriving (Show, Data, Typeable, Eq, Ord, Generic)
+instance (ToJSON a) => ToJSON (Persisted a)
+instance (FromJSON a) => FromJSON (Persisted a)
 
+persistedIdRev :: Persisted a -> IdRev a
+persistedIdRev (Persisted id rev _) = IdRev id rev
+
+type Identified a = (Text, a)
+identifiedId (id, _) = id
+identifiedEntity (_, entity) = entity
+
+data IdRev a = IdRev Text Text
 
 data EZCouchException 
   = ParsingException Text 
