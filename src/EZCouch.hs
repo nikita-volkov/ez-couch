@@ -5,8 +5,8 @@ module EZCouch (
   -- | All monadic functions are split into /CRUD/ categories. The functions with a /Multiple/ suffix are better alternatives for performing multiple operations at once.
 
   -- ** Creating 
-  create,
-  createMultiple,
+  createEntity,
+  createEntities,
   -- ** Reading 
   readEntities,
   readRandomEntities,
@@ -16,11 +16,11 @@ module EZCouch (
   readCount,
   KeysSelection(..),
   -- ** Updating 
-  update,
-  updateMultiple,
+  updateEntity,
+  updateEntities,
   -- ** Deleting 
-  delete,
-  deleteMultiple,
+  deleteEntity,
+  deleteEntities,
   
   -- * Server Time
   readTime,

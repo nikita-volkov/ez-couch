@@ -61,9 +61,9 @@ regenerateAs = do
   -- Fetch all existing entities of type `A`.
   as :: [Persisted A] <- readEntities ViewById KeysSelectionAll 0 Nothing False
   -- Delete them all.
-  deleteMultiple as
+  deleteEntities as
   -- Create new ones.
-  createMultiple $ map (\i -> A i "a" Nothing) [0..7]
+  createEntities $ map (\i -> A i "a" Nothing) [0..7]
 
 printRandomAs = do
   -- Fetch at most 2 random entities.

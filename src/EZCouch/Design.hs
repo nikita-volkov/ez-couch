@@ -40,12 +40,12 @@ createOrUpdateDesign design =
       case design' of
         Just design'@(Persisted id rev design'') -> if design'' == design
           then return design'
-          else update $ Persisted id rev design
+          else updateEntity $ Persisted id rev design
         Nothing -> throwIO e
     _ -> throwIO e
 
 createDesign :: (MonadAction m, Doc a) => Design a -> m (Persisted (Design a))
-createDesign design = createWithId id design
+createDesign design = createEntityWithId id design
   where
     id = "_design/" ++ designName design
 
@@ -63,7 +63,7 @@ updateDesignView
   | otherwise
     = updateViewsMap $ insert viewName view viewsMap
   where 
-    updateViewsMap = update . Persisted designId designRev . Design
+    updateViewsMap = updateEntity . Persisted designId designRev . Design
 
 createOrUpdateDesignView :: (MonadAction m, Doc a)
   => Text -> View -> m (Persisted (Design a))
