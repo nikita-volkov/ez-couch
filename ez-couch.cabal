@@ -20,6 +20,7 @@ library
   exposed-modules:  EZCouch
   other-modules:    Control.Retry
                     Database.CouchDB.Conduit.View.Query
+                    EZCouch.Base62
                     EZCouch.Doc
                     EZCouch.Action
                     EZCouch.WriteAction
@@ -27,6 +28,7 @@ library
                     EZCouch.Encoding
                     EZCouch.Ids
                     EZCouch.Isolation
+                    EZCouch.JS
                     EZCouch.Model.Design
                     EZCouch.Model.Isolation
                     EZCouch.Model.View
@@ -61,6 +63,7 @@ library
                     string-conversions >= 0.2,
                     classy-prelude >= 0.4.4,
                     classy-prelude-conduit >= 0.4,
+                    hashable >= 1.1,
                     vector 
 
 source-repository head

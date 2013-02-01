@@ -5,28 +5,29 @@ module EZCouch (
   -- | All monadic functions are split into /CRUD/ categories. The functions with a /Multiple/ suffix are better alternatives for performing multiple operations at once.
 
   -- ** Creating 
-  create,
-  createMultiple,
+  createEntity,
+  createEntities,
   -- ** Reading 
-  -- | All reading actions accept a `ReadOptions` parameter which specifies how filtering and ordering should go.
-  readOne,
-  readMultiple,
-  readExists,
-  readIds,
+  readEntities,
+  readRandomEntities,
+  readEntity,
+  readKeysExist,
   readKeys,
   readCount,
+  KeysSelection(..),
   -- ** Updating 
-  update,
-  updateMultiple,
+  updateEntity,
+  updateEntities,
   -- ** Deleting 
-  delete,
-  deleteMultiple,
+  deleteEntity,
+  deleteEntities,
   
   -- * Server Time
   readTime,
 
   -- * Working with Views
-  createOrUpdateView,  
+  View(..),
+  ViewKey(..),
 
   -- * Transactions
   -- | CouchDB doesn't provide a way to do traditional locking-based transactions, as it applies an Optimistic Concurrency Control strategy (<http://en.wikipedia.org/wiki/Optimistic_concurrency_control>). EZCouch approaches the issue by abstracting over it.
@@ -34,12 +35,6 @@ module EZCouch (
 
   -- * Types
   Persisted(..),
-  EZCouchException(..),
-  View(..),
-  ReadOptions(..),
-  readOptions,
-  ConnectionSettings(..),
-  defaultPort,
 
   -- * Helpers
   tryOperation,
@@ -48,6 +43,9 @@ module EZCouch (
   MonadAction(..),
   run,
   runWithManager,
+  ConnectionSettings(..),
+  defaultPort,
+  EZCouchException(..),
 
   -- * Classes which records should implement
   Doc(..),

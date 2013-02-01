@@ -19,6 +19,18 @@ import qualified Data.Conduit.Attoparsec as Atto
 
 logM lvl = Logging.logM lvl "EZCouch.Action"
 
+
+data ConnectionSettings 
+  = ConnectionSettings {  
+      connectionSettingsHost :: Text,
+      connectionSettingsPort :: Int,
+      connectionSettingsAuth :: Maybe (Text, Text),
+      connectionSettingsDatabase :: Text
+    }
+
+defaultPort = 5984 :: Int
+
+
 -- | All EZCouch operations are performed in this monad.
 class (MonadBaseControl IO m, MonadResource m, MonadReader (ConnectionSettings, Manager) m) => MonadAction m where
 
