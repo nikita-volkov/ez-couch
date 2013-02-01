@@ -31,7 +31,7 @@ inIsolation timeout id action = do
       isolation <- readEntity ViewById (KeysSelectionList [id']) 0 False
       case isolation of
         Just isolation -> do
-          if (Isolation.since . persistedValue) isolation < Time.addUTCTime (negate $ fromIntegral timeout) time
+          if (Isolation.since . persistedEntity) isolation < Time.addUTCTime (negate $ fromIntegral timeout) time
             then do 
               logM 0 $ "Deleting outdated isolation: " ++ id'
               tryToDelete isolation

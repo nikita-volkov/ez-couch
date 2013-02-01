@@ -6,7 +6,7 @@ import Prelude ()
 import ClassyPrelude 
 import Data.Generics (Data, Typeable)
 
-data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persistedValue :: a }
+data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persistedEntity :: a }
   deriving (Show, Data, Typeable, Eq, Ord)
 
 
