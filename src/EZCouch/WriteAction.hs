@@ -18,7 +18,7 @@ data WriteOperation a
   | Update Text Text a
   | Delete Text Text
 
-writeOperationsAction :: (MonadAction m, Entity a) 
+writeOperationsAction :: (MonadAction m, ToJSON a) 
   => [WriteOperation a] 
   -> m [(Text, Maybe Text)]
   -- ^ Maybe rev by id. Nothing on failure.
@@ -56,7 +56,7 @@ deleteEntities = deleteEntitiesByIdRevs . map persistedIdRev
 deleteEntity :: (MonadAction m, Entity a) => Persisted a -> m ()
 deleteEntity = deleteEntities . singleton
 
-createEntitiesWithIds :: (MonadAction m, Entity a) 
+createEntitiesWithIds :: (MonadAction m, ToJSON a) 
   => [(Text, a)] 
   -> m [Either (Text, a) (Persisted a)]
 createEntitiesWithIds idsToVals 

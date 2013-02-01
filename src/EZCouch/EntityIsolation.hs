@@ -21,7 +21,7 @@ logM lvl = Logging.logM lvl "EZCouch.EntityIsolation"
 
 type Isolation e = Persisted (Identified e)
 
-isolationIdRev :: Isolation e -> IdRev (Model.EntityIsolation e)
+isolationIdRev :: Isolation e -> IdRev Model.EntityIsolation
 isolationIdRev i = IdRev (persistedId i) (persistedRev i)
 
 
@@ -38,7 +38,11 @@ isolateEntity :: (MonadAction m, Entity e)
 isolateEntity timeout persisted = do
   till <- Time.addUTCTime (fromIntegral timeout) <$> readTime
   isolation <- tryOperation $ createEntity $ 
-    Model.EntityIsolation identified till
+    Model.EntityIsolation 
+      (persistedId persisted) 
+      (toJSON $ persistedEntity persisted) 
+      till
+    -- Model.EntityIsolation (toJSON identified) till
   case isolation of
     Nothing -> return Nothing
     Just (Persisted id rev _) -> do

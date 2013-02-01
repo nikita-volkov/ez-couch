@@ -55,6 +55,9 @@ module EZCouch (
   FromJSON(..)
 ) where
 
+import Prelude ()
+import ClassyPrelude
+
 import EZCouch.Action
 import EZCouch.Types
 import EZCouch.ReadAction
@@ -65,4 +68,18 @@ import EZCouch.Time
 import EZCouch.Isolation
 import EZCouch.Try
 import EZCouch.EntityIsolation
+import EZCouch.Sweeper
 import Data.Aeson
+
+import Control.Monad.Reader
+import Control.Monad.Trans.Resource
+import qualified Network.HTTP.Conduit as HTTP
+
+runWithManager manager settings action = 
+  flip runReaderT (settings, manager) $ runResourceT $ do
+    resourceForkIO $ lift $ runSweeper
+    lift $ action
+
+run settings action = HTTP.withManager $ \manager -> 
+  runWithManager manager settings action
+

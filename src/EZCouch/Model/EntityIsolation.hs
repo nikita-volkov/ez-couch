@@ -9,14 +9,17 @@ import EZCouch.Types
 import Data.Aeson
 import Data.Time
 
-data EntityIsolation a
+data EntityIsolation
   = EntityIsolation { 
-      entity :: Identified a,
+      entityId :: Text,
+      entityValue :: Value, 
+      -- entity :: Value, 
+      -- ^ A JSON value to simplify internal handling and reduce conversions.
       till :: UTCTime
     }
   deriving (Show, Eq, Generic)
-instance (ToJSON a) => ToJSON (EntityIsolation a)
-instance (FromJSON a) => FromJSON (EntityIsolation a)
-instance (Entity a) => Entity (EntityIsolation a) where
+instance ToJSON EntityIsolation
+instance FromJSON EntityIsolation
+instance Entity EntityIsolation where
   entityType = const "EZCouchEntityIsolation"
 
