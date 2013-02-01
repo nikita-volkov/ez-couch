@@ -10,7 +10,7 @@ maintainer:         Nikita Volkov <nikita.y.volkov@mail.ru>
 stability:          experimental
 homepage:           https://github.com/nikita-volkov/ez-couch
 bug-reports:        https://github.com/nikita-volkov/ez-couch/issues
-synopsis:           A high level library for working with CouchDB
+synopsis:           A high level static library for working with CouchDB
 description:        EZCouch is a library which takes a mission of bringing the topmost level of abstraction for working with CouchDB from Haskell. It abstracts away from loose concepts of this database and brings a strict static API over standard ADTs. 
 category:           Database, CouchDB
 
