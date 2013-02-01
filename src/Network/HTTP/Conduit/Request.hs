@@ -4,6 +4,7 @@ module Network.HTTP.Conduit.Request where
 import Prelude ()
 import ClassyPrelude
 import Network.HTTP.Conduit
+import Network.HTTP.Types
 
 withHeader (name, value) request
   = request { requestHeaders = headers' }
@@ -21,6 +22,7 @@ withDefaultHeaders headers request
   where
     headers' = headersUnion (requestHeaders request) headers
 
+headersUnion :: [Header] -> [Header] -> [Header]
 headersUnion headers1 headers2
   = headers1 ++ new
   where 
