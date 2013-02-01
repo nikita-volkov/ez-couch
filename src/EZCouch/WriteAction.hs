@@ -39,16 +39,19 @@ operationJSON (Update id rev a)
 operationJSON (Delete id rev)
   = Aeson.object [("_id", toJSON id), ("_rev", toJSON rev), ("_deleted", Aeson.Bool True)] 
 
-deleteEntities :: (MonadAction m, Entity a) => [Persisted a] -> m ()
-deleteEntities vals = do
-  results <- writeOperationsAction $ map toOperation vals
+deleteEntitiesByIdRevs :: (MonadAction m, Entity a) => [IdRev a] -> m ()
+deleteEntitiesByIdRevs idRevs = do
+  results <- writeOperationsAction $ map toOperation idRevs
   let failedIds = fmap fst $ filter (isNothing . snd) results
   if null failedIds
     then return ()
     else throwIO $ OperationException $ "Couldn't delete entities by following ids: " ++ show failedIds
   where
-    toOperation :: Persisted a -> WriteOperation a
-    toOperation (Persisted id rev val) = Delete id rev
+    toOperation :: IdRev a -> WriteOperation a
+    toOperation (IdRev id rev) = Delete id rev
+
+deleteEntities :: (MonadAction m, Entity a) => [Persisted a] -> m ()
+deleteEntities = deleteEntitiesByIdRevs . map persistedIdRev
 
 deleteEntity :: (MonadAction m, Entity a) => Persisted a -> m ()
 deleteEntity = deleteEntities . singleton
