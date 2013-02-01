@@ -14,6 +14,7 @@ data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persis
 instance (ToJSON a) => ToJSON (Persisted a)
 instance (FromJSON a) => FromJSON (Persisted a)
 
+type Identified a = (Text, a)
 
 data EZCouchException 
   = ParsingException Text 

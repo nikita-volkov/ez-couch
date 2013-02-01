@@ -34,7 +34,6 @@ module EZCouch (
   inIsolation,
   isolateEntity,
   Isolation(..),
-  isolationEntity,
   -- * Types
   Persisted(..),
 

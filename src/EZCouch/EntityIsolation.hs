@@ -18,9 +18,7 @@ import qualified Util.Logging as Logging
 
 logM lvl = Logging.logM lvl "EZCouch.EntityIsolation"
 
-
-type Isolation e = Persisted (Persisted e)
-isolationEntity = persistedEntity
+type Isolation e = Persisted (Identified e)
 
 isolateEntity :: (MonadAction m, Entity e) 
   => Int
@@ -32,14 +30,17 @@ isolateEntity :: (MonadAction m, Entity e)
   -> m (Maybe (Isolation e))
   -- ^ Either the isolation or nothing if the entity has been already isolated
   -- by concurrent client.
-isolateEntity timeout entity = do
+isolateEntity timeout persisted = do
   till <- Time.addUTCTime (fromIntegral timeout) <$> readTime
-  isolation <- tryOperation $ createEntity $ Model.EntityIsolation entity till
+  isolation <- tryOperation $ createEntity $ 
+    Model.EntityIsolation identified till
   case isolation of
     Nothing -> return Nothing
     Just (Persisted id rev _) -> do
-      deleteEntity entity
-      return $ Just (Persisted id rev entity)
+      deleteEntity persisted
+      return $ Just (Persisted id rev identified)
+  where
+    identified = (persistedId persisted, persistedEntity persisted)
 
 
 -- releaseEntity :: (MonadAction m, Entity e)

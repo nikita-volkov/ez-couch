@@ -11,10 +11,8 @@ import Data.Time
 
 data EntityIsolation a
   = EntityIsolation { 
-      entity :: Persisted a,
+      entity :: Identified a,
       till :: UTCTime
-      -- since :: UTCTime, 
-      -- timeout :: Int 
     }
   deriving (Show, Eq, Generic)
 instance (ToJSON a) => ToJSON (EntityIsolation a)
