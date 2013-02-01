@@ -20,6 +20,7 @@ logM lvl = Logging.logM lvl "EZCouch.EntityIsolation"
 
 
 type Isolation e = Persisted (Identified e)
+
 isolationIdRev :: Isolation e -> IdRev (Model.EntityIsolation e)
 isolationIdRev i = IdRev (persistedId i) (persistedRev i)
 
@@ -46,10 +47,10 @@ isolateEntity timeout persisted = do
   where
     identified = (persistedId persisted, persistedEntity persisted)
 
-
+-- | Restore the entity document under the same id.
 releaseEntity :: (MonadAction m, Entity e)
-  => Isolation e
-  -> m (Persisted e)
+  => Isolation e -- ^ The isolation returned by `isolateEntity`.
+  -> m (Persisted e) -- ^ The restored entity.
 releaseEntity isolation = do
   entity <- createEntityWithId entityId entityValue
   deleteEntitiesByIdRevs . singleton $ isolationIdRev isolation
