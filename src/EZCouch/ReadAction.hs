@@ -17,28 +17,6 @@ import qualified Network.HTTP.Types as HTTP
 import Data.Aeson.Types
 
 
--- data KeysReadOption k = 
---   KeysReadOptionAll |
---   KeysReadOptionRange (Maybe k) (Maybe k) |
---   KeysReadOptionList [k]
---   deriving (Show, Eq)
-
--- data ReadOptions a k = 
---   ReadOptions {
---     readOptionsView :: View a k,
---     readOptionsKeys :: KeysReadOption k,
---     readOptionsDescending :: Bool,
---     readOptionsLimit :: Maybe Int,
---     readOptionsSkip :: Int
---   }
---   deriving (Show, Eq)
-  
--- readOptions :: ReadOptions a Text
--- readOptions = ReadOptions ViewAll KeysReadOptionAll False Nothing 0
--- readOptions = ReadOptions Nothing Nothing Nothing ViewAll False Nothing 0
-
-
--- .. Selection mode
 data KeysSelection k
   = KeysSelectionAll
   | KeysSelectionRange k k
@@ -46,35 +24,6 @@ data KeysSelection k
   | KeysSelectionRangeEnd k
   | KeysSelectionList [k]
   deriving (Show, Eq)
-
--- data FetchingOption
---   = FetchingOptionLimit Int
---   | FetchingOptionSkip Int
---   | FetchingOptionDesc
-
-
--- -- | Results assortion and filtering.
--- data ReadMode k
---   = ReadModeAll
---       Int -- ^ Skip
---       Int -- ^ Limit
---       Bool -- ^ Descending
---   | ReadModeRange 
---       k -- ^ Start Key
---       k -- ^ End Key
---       Bool -- ^ Descending
---   | ReadModeRangeNoEnd 
---       k -- ^ Start Key
---       Int -- ^ Limit
---       Bool -- ^ Descending
---   | ReadModeRangeNoStart 
---       k -- ^ End Key
---       Int -- ^ Limit
---       Bool -- ^ Descending
---   | ReadModeKeys 
---       [k] -- ^ Keys
---       Bool -- ^ Descending
---   deriving (Show, Eq)
 
 
 readAction :: (MonadAction m, Doc a, ToJSON k)
@@ -87,7 +36,6 @@ readAction :: (MonadAction m, Doc a, ToJSON k)
   -> m Value -- ^ An unparsed response body JSON
 readAction view mode skip limit desc includeDocs = 
   action path qps body `catch` \e -> case e of
-    -- OperationException {} -> do
     HTTP.StatusCodeException (HTTP.Status code _) _ 
       | code `elem` [404, 500] 
       -> do
@@ -111,53 +59,18 @@ readAction view mode skip limit desc includeDocs =
       KeysSelectionList keys -> Encoding.keysBody keys
       _ -> ""
 
-    -- qps = case mode of
-    --   ReadModeAll skip limit desc -> concat [
-    --       pure $ CC.QPLimit limit,
-    --       repack $ skipQP skip,
-    --       repack $ descQP desc,
-    --       docTypeQPs (viewDocType view)
-    --     ]
-    --   ReadModeRange start end desc -> concat [
-    --       pure $ CC.QPStartKey start,
-    --       pure $ CC.QPEndKey end,
-    --       repack $ descQP desc
-    --     ]
-    --   ReadModeRangeNoEnd start limit desc -> concat [
-    --       pure $ CC.QPStartKey start,
-    --       pure $ CC.QPLimit limit,
-    --       repack $ descQP desc
-    --     ]
-
-    -- docTypeQPs = case mode of
-    --   KeysSelection {} -> []
-
 
 startKeyQP _ (KeysSelectionRange start end) = Just $ CC.QPStartKey start
 startKeyQP _ (KeysSelectionRangeStart start) = Just $ CC.QPStartKey start
 startKeyQP _ (KeysSelectionList {}) = Nothing
 startKeyQP view@ViewAll _ = Just $ CC.QPStartKey $ viewDocType view ++ "-"
 startKeyQP _ _ = Nothing
--- startKeyQP view mode = case view of
---   ViewAll -> case mode of
---     KeysSelectionList {} -> Nothing
---     KeysSelectionRange start end -> Just $ CC.QPStartKey start
---     KeysSelectionRangeStart start -> Just $ CC.QPStartKey start
---     _ -> Just $ CC.QPStartKey $ viewDocType view ++ "-"
---   _ -> Nothing
 
 endKeyQP _ (KeysSelectionRange start end) = Just $ CC.QPEndKey end
 endKeyQP _ (KeysSelectionRangeEnd end) = Just $ CC.QPEndKey end
 endKeyQP _ (KeysSelectionList {}) = Nothing
 endKeyQP view@ViewAll _ = Just $ CC.QPEndKey $ viewDocType view ++ "."
 endKeyQP _ _ = Nothing
--- endKeyQP view mode = case view of
---   ViewAll -> case mode of
---     KeysSelectionList {} -> Nothing
---     KeysSelectionRange start end -> Just $ CC.QPEndKey end
---     KeysSelectionRangeEnd end -> Just $ CC.QPEndKey end
---     _ -> Just $ CC.QPEndKey $ viewDocType view ++ "."
---   _ -> Nothing
 
 limitQP limit = CC.QPLimit <$> limit
 

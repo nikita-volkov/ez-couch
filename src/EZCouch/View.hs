@@ -5,7 +5,6 @@ import Prelude ()
 import ClassyPrelude
 import GHC.Generics
 import Data.Aeson
-import Data.Map (adjust)
 import Data.Generics (Data, Typeable)
 import EZCouch.Action
 import EZCouch.Doc
@@ -134,17 +133,6 @@ viewPath view = case view of
   _ -> ["_design", fromMaybe undefined $ viewDesignName view, 
         "_view", fromMaybe undefined $ viewGeneratedName view]
 
--- data A = A deriving (Generic)
--- instance ToJSON A
--- instance FromJSON A
--- instance Doc A
--- main = do
---   Foldable.mapM_ putStrLn $ viewMapFunctionJS $ view
---   Foldable.mapM_ putStrLn $ viewGeneratedName $ view
---   where
---     view :: View A (Text, Text)
---     view = ViewKeys2 (ViewKeyRandom) (ViewKeyField "ab.sd.d")
-      
 createOrUpdateView :: (MonadAction m, Doc a) 
   => View a k 
   -> m (Persisted (DesignModel a))
@@ -153,6 +141,3 @@ createOrUpdateView view
     Just model <- ViewModel.View <$> viewMapFunctionJS view <*> pure Nothing
     = createOrUpdateDesignView name model
   | otherwise = error "EZCouch.View.createOrUpdateView: Attempt to persist a view which does not support it"
-  -- = createOrUpdateDesignView 
-  --   <$> viewGeneratedName view 
-  --   <*> (ViewModel.View <$> viewMapFunctionJS view <*> pure Nothing)
