@@ -33,7 +33,7 @@ instance ToJS (ViewKey a) where
   toJS (ViewKeyField field) = "doc." ++ field
   toJS ViewKeyRandom = "Math.random()"
 instance Hashable (ViewKey a) where
-  hash = hash . toJS
+  hashWithSalt salt = hashWithSalt salt . toJS
 
 -- TODO: rename ViewById and ViewByKeyN
 data View entity keys where
@@ -85,15 +85,15 @@ data View entity keys where
 deriving instance Show (View entity keys)
 deriving instance Eq (View entity keys)
 instance Hashable (View entity keys) where
-  hash view = case view of
+  hashWithSalt salt view = case view of
     ViewById -> 0
-    ViewByKeys1 a -> hash a
-    ViewByKeys2 a b -> hash (a, b)
-    ViewByKeys3 a b c -> hash (a, b, c)
-    ViewByKeys4 a b c d -> hash (a, b, c, d)
-    ViewByKeys5 a b c d e -> hash (a, b, c, d, e)
-    ViewByKeys6 a b c d e f -> hash (a, b, c, d, e, f)
-    ViewByKeys7 a b c d e f g -> hash (a, b, c, d, e, f, g)
+    ViewByKeys1 a -> hashWithSalt salt a
+    ViewByKeys2 a b -> hashWithSalt salt (a, b)
+    ViewByKeys3 a b c -> hashWithSalt salt (a, b, c)
+    ViewByKeys4 a b c d -> hashWithSalt salt (a, b, c, d)
+    ViewByKeys5 a b c d e -> hashWithSalt salt (a, b, c, d, e)
+    ViewByKeys6 a b c d e f -> hashWithSalt salt (a, b, c, d, e, f)
+    ViewByKeys7 a b c d e f g -> hashWithSalt salt (a, b, c, d, e, f, g)
 
 
 viewGeneratedName :: View a k -> Maybe Text
