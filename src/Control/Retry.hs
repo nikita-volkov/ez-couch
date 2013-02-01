@@ -24,7 +24,7 @@ retrying exceptionIntervals action = retrying_ 0
         exceptionInterval = listToMaybe . drop attempt . exceptionIntervals
         processException e 
           | Just i <- exceptionInterval e = do
-              Logging.logM 3 "Control.Retry"
+              Logging.logM 0 "Control.Retry"
                 $ "Error occurred: " ++ show e ++ ". " 
                   ++ "Retrying with a " ++ show (i `div` sec) ++ "s delay."
               unless (i == 0) (liftIO (threadDelay i)) 
