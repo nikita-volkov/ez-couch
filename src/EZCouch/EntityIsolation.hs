@@ -68,7 +68,7 @@ entityIsolationModel :: (Entity e)
 entityIsolationModel till entity =
   Model.EntityIsolation
     (persistedId entity)
-    (toJSON $ persistedEntity entity)
+    (toJSON $ persistedValue entity)
     till
 
 entityIsolationId :: Persisted e -> Text

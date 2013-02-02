@@ -10,7 +10,7 @@ import GHC.Generics
 
 -- | A wrapper for entity values which preserves the information required for
 -- identifying the appropriate documents in the db.
-data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persistedEntity :: a }
+data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persistedValue :: a }
   deriving (Show, Typeable, Eq, Ord, Generic)
 instance (ToJSON a) => ToJSON (Persisted a)
 instance (FromJSON a) => FromJSON (Persisted a)
@@ -19,11 +19,11 @@ persistedIdRev :: Persisted a -> IdRev a
 persistedIdRev (Persisted id rev _) = IdRev id rev
 
 persistedIdentified :: Persisted a -> Identified a
-persistedIdentified (Persisted id _ entity) = (id, entity)
+persistedIdentified (Persisted id _ value) = (id, value)
 
 type Identified a = (Text, a)
 identifiedId (id, _) = id
-identifiedEntity (_, entity) = entity
+identifiedValue (_, value) = value
 
 data IdRev a = IdRev Text Text
 

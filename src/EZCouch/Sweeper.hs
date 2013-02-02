@@ -42,4 +42,4 @@ releaseIsolations isolations = do
   deleteEntities isolations
 
 idAndValue =
-  (EntityIsolation.entityId &&& EntityIsolation.entityValue) . persistedEntity
+  (EntityIsolation.entityId &&& EntityIsolation.entityValue) . persistedValue
