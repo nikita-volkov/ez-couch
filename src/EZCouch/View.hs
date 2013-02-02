@@ -48,7 +48,6 @@ instance ToJS (ViewKey a) where
 instance Hashable (ViewKey a) where
   hashWithSalt salt = hashWithSalt salt . toJS
 
--- TODO: rename ViewById and ViewByKeyN
 data View entity keys where
   ViewById 
     :: View entity Text
