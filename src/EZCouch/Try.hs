@@ -8,9 +8,10 @@ import EZCouch.Action
 import EZCouch.Types
 import EZCouch.WriteAction
 
--- | Return `Nothing` if an action throws an `OperationException` or `Just` its result otherwise.
+-- | Return `Nothing` if an action throws an `OperationException` or `Just` its 
+-- result otherwise.
 -- 
--- This is only useful for a modifying actions (Create, Update, Delete).
+-- This is only useful for writing actions (Create, Update, Delete).
 tryOperation :: (MonadAction m) => m a -> m (Maybe a)
 tryOperation action = (Just <$> action) `catch` \e -> case e of
   OperationException _ -> return Nothing
