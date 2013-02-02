@@ -5,14 +5,13 @@ module EZCouch.Types where
 
 import Prelude ()
 import ClassyPrelude 
-import Data.Generics (Data, Typeable)
 import Data.Aeson
 import GHC.Generics
 
 -- | A wrapper for entity values which preserves the information required for
 -- identifying the appropriate documents in the db.
 data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persistedEntity :: a }
-  deriving (Show, Data, Typeable, Eq, Ord, Generic)
+  deriving (Show, Typeable, Eq, Ord, Generic)
 instance (ToJSON a) => ToJSON (Persisted a)
 instance (FromJSON a) => FromJSON (Persisted a)
 
@@ -33,6 +32,6 @@ data EZCouchException
   | ServerException Text
   -- ^ E.g., server provided an unexpected response
   | ConnectionException Text
-  deriving (Show, Data, Typeable)
+  deriving (Show, Typeable)
 instance Exception EZCouchException
 

@@ -5,7 +5,6 @@ import Prelude ()
 import ClassyPrelude
 import GHC.Generics
 import Data.Aeson
-import Data.Generics (Data, Typeable)
 import EZCouch.Action
 import EZCouch.Entity
 import EZCouch.Types
