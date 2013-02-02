@@ -48,6 +48,8 @@ isolateEntity timeout persisted = do
     _ -> throwIO $ ServerException $
       "EZCouch.EntityIsolation.isolateEntity: unexpected response"
 
+-- | Does the same as `isolateEntity` but for multiple entities and in a single
+-- request.
 isolateEntities :: (MonadAction m, Entity e)
   => Int
   -> [Persisted e]
