@@ -1,4 +1,4 @@
-#EZCouch. A high level static library for working with CouchDB from Haskell
+#EZCouch. A high level static library for working with CouchDB
 
 For people with a Haskell background a schemaless database interfaced with dynamic JavaScript, which CouchDB is, may seem like a perfect opportunity to shoot themselves in the foot. This library approaches the issue by providing a completely static API over ADTs for it. 
 
