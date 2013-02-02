@@ -13,7 +13,6 @@ data EntityIsolation
   = EntityIsolation { 
       entityId :: Text,
       entityValue :: Value, 
-      -- entity :: Value, 
       -- ^ A JSON value to simplify internal handling and reduce conversions.
       till :: UTCTime
     }

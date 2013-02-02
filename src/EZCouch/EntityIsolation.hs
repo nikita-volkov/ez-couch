@@ -42,7 +42,6 @@ isolateEntity timeout persisted = do
       (persistedId persisted) 
       (toJSON $ persistedEntity persisted) 
       till
-    -- Model.EntityIsolation (toJSON identified) till
   case isolation of
     Nothing -> return Nothing
     Just (Persisted id rev _) -> do
