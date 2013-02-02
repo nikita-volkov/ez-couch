@@ -45,7 +45,7 @@ createOrUpdateDesign design =
     _ -> throwIO e
 
 createDesign :: (MonadAction m, Entity a) => Design a -> m (Persisted (Design a))
-createDesign design = createEntityWithId id design
+createDesign design = createIdentifiedEntity (id, design)
   where
     id = "_design/" ++ designName design
 

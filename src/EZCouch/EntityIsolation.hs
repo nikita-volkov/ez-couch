@@ -59,12 +59,9 @@ releaseIsolation :: (MonadAction m, Entity e)
   => Isolation e -- ^ The isolation returned by `isolateEntity`.
   -> m (Persisted e) -- ^ The restored entity.
 releaseIsolation isolation = do
-  entity <- createEntityWithId entityId entityValue
+  entity <- createIdentifiedEntity (isolationEntity $ isolation)
   deleteEntitiesByIdRevs . singleton $ isolationIdRev isolation
   return entity
-  where
-    entityId = identifiedId . isolationEntity $ isolation
-    entityValue = identifiedEntity . isolationEntity $ isolation
 
 -- | Get rid of both the isolation and the entity. The entity won't get restored
 -- by the sweeper daemon after.

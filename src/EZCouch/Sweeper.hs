@@ -38,7 +38,7 @@ readZombieEntityIsolations = do
     False
 
 releaseIsolations isolations = do
-  createEntitiesWithIds $ map idAndValue isolations
+  createIdentifiedEntities $ map idAndValue isolations
   deleteEntities isolations
 
 idAndValue =

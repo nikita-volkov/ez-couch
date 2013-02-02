@@ -56,10 +56,10 @@ deleteEntities = deleteEntitiesByIdRevs . map persistedIdRev
 deleteEntity :: (MonadAction m, Entity a) => Persisted a -> m ()
 deleteEntity = deleteEntities . singleton
 
-createEntitiesWithIds :: (MonadAction m, ToJSON a) 
-  => [(Text, a)] 
+createIdentifiedEntities :: (MonadAction m, ToJSON a) 
+  => [Identified a]
   -> m [Either (Text, a) (Persisted a)]
-createEntitiesWithIds idsToVals 
+createIdentifiedEntities idsToVals 
   = writeOperationsAction [Create id val | (id, val) <- idsToVals]
       >>= mapM convertResult
   where
@@ -69,13 +69,13 @@ createEntitiesWithIds idsToVals
     convertResult (id, Just rev) = fmap Right $ 
       Persisted <$> pure id <*> pure rev <*> lookupThrowing id valById
 
-createEntityWithId :: (MonadAction m, Entity a)
-  => Text
-  -> a
+createIdentifiedEntity :: (MonadAction m, Entity a)
+  => Identified a
   -> m (Persisted a)
-createEntityWithId id val = createEntitiesWithIds [(id, val)] 
-  >>= return . join . fmap (either (const Nothing) Just) . listToMaybe 
-  >>= maybe (throwIO $ OperationException "Failed to create entity") return
+createIdentifiedEntity = 
+  createIdentifiedEntities . singleton 
+    >=> return . join . fmap (either (const Nothing) Just) . listToMaybe 
+    >=> maybe (throwIO $ OperationException "Failed to create entity") return
 
 createEntities :: (MonadAction m, Entity a) => [a] -> m [Persisted a]
 createEntities = retry 10 
@@ -85,7 +85,7 @@ createEntities = retry 10
       return (id, val)
     retry attempts vals = do    
       idsToVals <- liftIO $ mapM generateIdToVal vals
-      results <- createEntitiesWithIds idsToVals
+      results <- createIdentifiedEntities idsToVals
       let (failures, successes) = partitionEithers results
       if attempts > 0 || null failures 
         then do

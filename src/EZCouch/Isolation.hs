@@ -25,7 +25,7 @@ inIsolation :: MonadAction m
   -> m (Maybe a) -- ^ Either the action's result or `Nothing` if it didn't get executed.
 inIsolation timeout id action = do
   time <- readTime 
-  result <- (try $ createEntityWithId id' $ Isolation time)
+  result <- try $ createIdentifiedEntity (id', Isolation time)
   case result of
     Left (OperationException _) -> do
       isolation <- readEntity ViewById (KeysSelectionList [id']) 0 False
