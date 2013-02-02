@@ -13,17 +13,14 @@ import EZCouch.ReadAction
 import EZCouch.WriteAction
 import EZCouch.Try
 import qualified EZCouch.Model.EntityIsolation as Model
-import EZCouch.Isolation
 import qualified Util.Logging as Logging
 
 logM lvl = Logging.logM lvl "EZCouch.EntityIsolation"
 
-
-type Isolation e = Persisted (Identified e)
-
-isolationIdRev :: Isolation e -> IdRev Model.EntityIsolation
-isolationIdRev i = IdRev (persistedId i) (persistedRev i)
-
+data Isolation e = Isolation {
+  isolationIdRev :: IdRev Model.EntityIsolation,
+  isolationEntity :: Identified e
+}
 
 -- | Protect the entity from being accessed by concurrent clients until you 
 -- release it using `releaseIsolation`, delete it with the isolation using 
@@ -51,9 +48,9 @@ isolateEntity timeout persisted = do
       till
   case isolation of
     Nothing -> return Nothing
-    Just (Persisted id rev _) -> do
+    Just isolation -> do
       deleteEntity persisted
-      return $ Just (Persisted id rev identified)
+      return $ Just (Isolation (persistedIdRev isolation) identified)
   where
     identified = (persistedId persisted, persistedEntity persisted)
 
@@ -66,8 +63,8 @@ releaseIsolation isolation = do
   deleteEntitiesByIdRevs . singleton $ isolationIdRev isolation
   return entity
   where
-    entityId = identifiedId . persistedEntity $ isolation
-    entityValue = identifiedEntity . persistedEntity $ isolation
+    entityId = identifiedId . isolationEntity $ isolation
+    entityValue = identifiedEntity . isolationEntity $ isolation
 
 -- | Get rid of both the isolation and the entity. The entity won't get restored
 -- by the sweeper daemon after.
