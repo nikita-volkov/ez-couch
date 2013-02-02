@@ -34,8 +34,11 @@ module EZCouch (
   isolateEntity,
   isolateEntities,
   releaseIsolation,
+  releaseIsolations,
   deleteIsolation,
+  deleteIsolations,
   Isolation,
+  isolationEntity,
   -- * Types
   Persisted(..),
 
@@ -70,7 +73,7 @@ import EZCouch.Time
 import EZCouch.Isolation
 import EZCouch.Try
 import EZCouch.EntityIsolation
-import EZCouch.Sweeper
+import qualified EZCouch.Sweeper as Sweeper
 import Data.Aeson
 
 import Control.Monad.Reader
@@ -79,7 +82,7 @@ import qualified Network.HTTP.Conduit as HTTP
 
 runWithManager manager settings action = 
   flip runReaderT (settings, manager) $ runResourceT $ do
-    resourceForkIO $ lift $ runSweeper
+    resourceForkIO $ lift $ Sweeper.runSweeper
     lift $ action
 
 run settings action = HTTP.withManager $ \manager -> 

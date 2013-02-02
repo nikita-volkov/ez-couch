@@ -21,8 +21,9 @@ logM lvl = Logging.logM lvl "EZCouch.EntityIsolation"
 
 data Isolation e = Isolation {
   isolationIdRev :: IdRev Model.EntityIsolation,
-  isolationEntity :: Identified e
+  isolationIdentified :: Identified e
 }
+isolationEntity = identifiedValue . isolationIdentified
 
 -- | Protect the entity from being accessed by concurrent clients until you 
 -- release it using `releaseIsolation`, delete it with the isolation using 
@@ -45,8 +46,7 @@ isolateEntity timeout persisted = do
   results <- isolateEntities timeout . singleton $ persisted
   case results of
     [result] -> return result
-    _ -> throwIO $ ServerException $
-      "EZCouch.EntityIsolation.isolateEntity: unexpected response"
+    _ -> throwIO $ ServerException $ "EZCouch.EntityIsolation.isolateEntity"
 
 -- | Does the same as `isolateEntity` but for multiple entities and in a single
 -- request.
@@ -80,15 +80,33 @@ entityIsolationId entity =
 releaseIsolation :: (MonadAction m, Entity e)
   => Isolation e -- ^ The isolation returned by `isolateEntity`.
   -> m (Persisted e) -- ^ The restored entity.
-releaseIsolation isolation = do
-  entity <- createIdentifiedEntity (isolationEntity $ isolation)
-  deleteEntitiesByIdRevs . singleton $ isolationIdRev isolation
-  return entity
+releaseIsolation = 
+  releaseIsolations . singleton >=> maybe fail return . listToMaybe
+  where
+    fail = throwIO $ ServerException "EZCouch.EntityIsolation.releaseIsolation"
+
+releaseIsolations :: (MonadAction m, Entity e)
+  => [Isolation e]
+  -> m [Persisted e]
+releaseIsolations isolations = do
+  results <- createIdentifiedEntities $ map isolationIdentified isolations
+  case sequence results of
+    Left _ -> throwIO $ OperationException $ 
+      "Could not recreate some entities when releasing the isolation"
+    Right entities -> do
+      deleteEntitiesByIdRevs $ map isolationIdRev isolations
+      return entities
 
 -- | Get rid of both the isolation and the entity. The entity won't get restored
 -- by the sweeper daemon after.
 deleteIsolation :: (MonadAction m, Entity e)
   => Isolation e
   -> m ()
-deleteIsolation isolation = 
-  deleteEntitiesByIdRevs . singleton $ isolationIdRev isolation
+deleteIsolation = deleteIsolations . singleton
+
+deleteIsolations :: (MonadAction m, Entity e)
+  => [Isolation e]
+  -> m ()
+deleteIsolations isolations = 
+  deleteEntitiesByIdRevs $ map isolationIdRev isolations
+
