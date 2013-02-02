@@ -9,6 +9,8 @@ import Data.Generics (Data, Typeable)
 import Data.Aeson
 import GHC.Generics
 
+-- | A wrapper for entity values which preserves the information required for
+-- identifying the appropriate documents in the db.
 data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persistedEntity :: a }
   deriving (Show, Data, Typeable, Eq, Ord, Generic)
 instance (ToJSON a) => ToJSON (Persisted a)
