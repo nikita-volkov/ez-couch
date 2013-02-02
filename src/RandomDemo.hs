@@ -1,8 +1,8 @@
 -- | This module showcases how EZCouch can be used to elegantly and 
 -- transparantly solve some quite untrivial CouchDB tasks. It shows how you can 
 -- fetch, create and delete entities from the database, how to use EZCouch's 
--- powerful features, such as Random Fetching, and how EZCouch transparantly 
--- manages the views for you.
+-- higher order features, such as Random Fetching, and how EZCouch 
+-- transparantly manages the views for you.
 
 -- These are required flags.
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables, DeriveGeneric #-}
