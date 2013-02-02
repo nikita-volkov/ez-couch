@@ -25,6 +25,13 @@ isolationIdRev :: Isolation e -> IdRev Model.EntityIsolation
 isolationIdRev i = IdRev (persistedId i) (persistedRev i)
 
 
+-- | Protect the entity from being accessed by concurrent clients until you 
+-- release it using `releaseIsolation`, delete it with the isolation using 
+-- `deleteIsolation`, or the timeout passes and it gets considered to be zombie 
+-- and gets released automatically some time later.
+-- 
+-- The automatic releasing gets done by a sweeper daemon running in background
+-- when EZCouch is being used on a timely basis and on its launch.
 isolateEntity :: (MonadAction m, Entity e) 
   => Int
   -- ^ A timeout in seconds. If the isolation does not get released when it
@@ -50,14 +57,22 @@ isolateEntity timeout persisted = do
   where
     identified = (persistedId persisted, persistedEntity persisted)
 
--- | Restore the entity document under the same id.
-releaseEntity :: (MonadAction m, Entity e)
+-- | Restore the entity document under the same id and drop the isolation.
+releaseIsolation :: (MonadAction m, Entity e)
   => Isolation e -- ^ The isolation returned by `isolateEntity`.
   -> m (Persisted e) -- ^ The restored entity.
-releaseEntity isolation = do
+releaseIsolation isolation = do
   entity <- createEntityWithId entityId entityValue
   deleteEntitiesByIdRevs . singleton $ isolationIdRev isolation
   return entity
   where
     entityId = identifiedId . persistedEntity $ isolation
     entityValue = identifiedEntity . persistedEntity $ isolation
+
+-- | Get rid of both the isolation and the entity. The entity won't get restored
+-- by the sweeper daemon after.
+deleteIsolation :: (MonadAction m, Entity e)
+  => Isolation e
+  -> m ()
+deleteIsolation isolation = 
+  deleteEntitiesByIdRevs . singleton $ isolationIdRev isolation
