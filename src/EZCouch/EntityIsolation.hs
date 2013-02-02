@@ -3,6 +3,8 @@ module EZCouch.EntityIsolation where
 
 import Prelude ()
 import ClassyPrelude
+import qualified Data.Traversable as Traversable
+import qualified Data.List as List
 import qualified Data.Time as Time
 import Data.Aeson
 import EZCouch.Time
@@ -39,20 +41,38 @@ isolateEntity :: (MonadAction m, Entity e)
   -> m (Maybe (Isolation e))
   -- ^ Either the isolation or nothing if the entity has been already isolated
   -- by concurrent client.
-isolateEntity timeout persisted = do
+isolateEntity timeout persisted = do 
+  results <- isolateEntities timeout . singleton $ persisted
+  case results of
+    [result] -> return result
+    _ -> throwIO $ ServerException $
+      "EZCouch.EntityIsolation.isolateEntity: unexpected response"
+
+isolateEntities :: (MonadAction m, Entity e)
+  => Int
+  -> [Persisted e]
+  -> m ([Maybe (Isolation e)])
+isolateEntities timeout entities = do
   till <- Time.addUTCTime (fromIntegral timeout) <$> readTime
-  isolation <- tryOperation $ createEntity $ 
-    Model.EntityIsolation 
-      (persistedId persisted) 
-      (toJSON $ persistedEntity persisted) 
-      till
-  case isolation of
-    Nothing -> return Nothing
-    Just isolation -> do
-      deleteEntity persisted
-      return $ Just (Isolation (persistedIdRev isolation) identified)
-  where
-    identified = (persistedId persisted, persistedEntity persisted)
+  results <- createIdentifiedEntities $
+    map (entityIsolationId &&& entityIsolationModel till) entities
+  forM (List.zip entities results) $ \r -> case r of
+    (entity, Right isolation) -> return $ Just $ 
+      Isolation (persistedIdRev isolation) (persistedIdentified entity)
+    _ -> return Nothing
+
+entityIsolationModel :: (Entity e) 
+  => Time.UTCTime -> Persisted e -> Model.EntityIsolation
+entityIsolationModel till entity =
+  Model.EntityIsolation
+    (persistedId entity)
+    (toJSON $ persistedEntity entity)
+    till
+
+entityIsolationId :: Persisted e -> Text
+entityIsolationId entity = 
+  entityType (undefined :: Model.EntityIsolation) 
+    ++ "-" ++ persistedId entity
 
 -- | Restore the entity document under the same id and drop the isolation.
 releaseIsolation :: (MonadAction m, Entity e)

@@ -18,6 +18,9 @@ instance (FromJSON a) => FromJSON (Persisted a)
 persistedIdRev :: Persisted a -> IdRev a
 persistedIdRev (Persisted id rev _) = IdRev id rev
 
+persistedIdentified :: Persisted a -> Identified a
+persistedIdentified (Persisted id _ entity) = (id, entity)
+
 type Identified a = (Text, a)
 identifiedId (id, _) = id
 identifiedEntity (_, entity) = entity
