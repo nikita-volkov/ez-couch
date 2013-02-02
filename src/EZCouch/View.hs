@@ -24,7 +24,21 @@ type DesignModel = DesignModel.Design
 
 data ViewKey a = 
   ViewKeyField Text |
+  -- ^ A path to a field value.
+  -- 
+  -- Assuming the following record declarations:
+  -- 
+  -- > data A = A { b :: B }
+  -- > data B = B { c :: Int }
+  -- 
+  -- A path value of @\"b.c\"@ will emit the values of the @c@ field of a JSON 
+  -- object representing the record @B@ in a view key of type @ViewKey A@.
+  -- 
+  -- Yes, it's not static. But it's probably the only place in the library that 
+  -- the compiler doesn't check for you.
   ViewKeyRandom
+  -- ^ This will emit a JavaScript @Math.random()@ value as a key. This is what 
+  -- makes the querying for random entities possible.
   deriving (Show, Eq)
 
 
