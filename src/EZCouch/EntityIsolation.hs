@@ -92,7 +92,7 @@ releaseIsolations isolations = do
   results <- createIdentifiedEntities $ map isolationIdentified isolations
   case sequence results of
     Left _ -> throwIO $ OperationException $ 
-      "Could not recreate some entities when releasing the isolation"
+      "Could not recreate entities under following ids when releasing the isolation: " ++ show (map fst . lefts $ results)
     Right entities -> do
       deleteEntitiesByIdRevs $ map isolationIdRev isolations
       return entities
