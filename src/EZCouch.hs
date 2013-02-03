@@ -70,7 +70,6 @@ import EZCouch.WriteAction
 import EZCouch.View
 import EZCouch.Entity
 import EZCouch.Time
-import EZCouch.Isolation
 import EZCouch.Try
 import EZCouch.EntityIsolation
 import qualified EZCouch.Sweeper as Sweeper
