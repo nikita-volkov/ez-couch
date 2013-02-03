@@ -58,7 +58,7 @@ generateRequest method dbPath qps body = do
         queryString = query,
         requestBody = RequestBodyLBS body,
         checkStatus = checkStatus,
-        responseTimeout = Just $ 10 ^ 6 * 10
+        responseTimeout = Just $ 10 ^ 6 * 30
       }
       where
         authenticated
