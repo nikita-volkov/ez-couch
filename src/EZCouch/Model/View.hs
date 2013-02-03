@@ -4,7 +4,7 @@ module EZCouch.Model.View where
 import Prelude ()
 import ClassyPrelude
 import GHC.Generics
-import EZCouch.Doc
+import EZCouch.Entity
 import Data.Aeson
 
 data View = View { map :: Text, reduce :: Maybe Text }

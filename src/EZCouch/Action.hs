@@ -19,6 +19,18 @@ import qualified Data.Conduit.Attoparsec as Atto
 
 logM lvl = Logging.logM lvl "EZCouch.Action"
 
+
+data ConnectionSettings 
+  = ConnectionSettings {  
+      connectionSettingsHost :: Text,
+      connectionSettingsPort :: Int,
+      connectionSettingsAuth :: Maybe (Text, Text),
+      connectionSettingsDatabase :: Text
+    }
+
+defaultPort = 5984 :: Int
+
+
 -- | All EZCouch operations are performed in this monad.
 class (MonadBaseControl IO m, MonadResource m, MonadReader (ConnectionSettings, Manager) m) => MonadAction m where
 
@@ -46,7 +58,7 @@ generateRequest method dbPath qps body = do
         queryString = query,
         requestBody = RequestBodyLBS body,
         checkStatus = checkStatus,
-        responseTimeout = Just $ 10 ^ 6 * 10
+        responseTimeout = Just $ 10 ^ 6 * 30
       }
       where
         authenticated
@@ -93,10 +105,5 @@ getResponseJSON method path qps body = do
 putAction path = getResponseJSON HTTP.methodPut (Just path)
 postAction path = getResponseJSON HTTP.methodPost (Just path)
 getAction path = getResponseJSON HTTP.methodGet (Just path)
-
-runWithManager manager settings action = 
-  runReaderT action (settings, manager)
-run settings action = HTTP.withManager $ \manager -> 
-  runWithManager manager settings action
 
 packPath = Blaze.toByteString . HTTP.encodePathSegments . filter (/="")

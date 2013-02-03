@@ -2,7 +2,7 @@
 module EZCouch.Isolation where
 
 import Prelude ()
-import ClassyPrelude hiding (delete)
+import ClassyPrelude
 import qualified Data.Time as Time
 
 import EZCouch.Time
@@ -10,6 +10,7 @@ import EZCouch.Types
 import EZCouch.Action hiding (logM)
 import EZCouch.ReadAction
 import EZCouch.WriteAction
+import EZCouch.View
 import EZCouch.Model.Isolation as Isolation
 
 import qualified Util.Logging as Logging
@@ -24,10 +25,10 @@ inIsolation :: MonadAction m
   -> m (Maybe a) -- ^ Either the action's result or `Nothing` if it didn't get executed.
 inIsolation timeout id action = do
   time <- readTime 
-  result <- (try $ createWithId id' $ Isolation time)
+  result <- try $ createIdentifiedEntity (id', Isolation time)
   case result of
     Left (OperationException _) -> do
-      isolation <- readOne $ readOptions { readOptionsKeys = Just [id'] }
+      isolation <- readEntity ViewById (KeysSelectionList [id']) 0 False
       case isolation of
         Just isolation -> do
           if (Isolation.since . persistedValue) isolation < Time.addUTCTime (negate $ fromIntegral timeout) time
@@ -44,10 +45,10 @@ inIsolation timeout id action = do
     Left e -> throwIO e
     Right isolation -> do
       logM 0 $ "Performing an isolation: " ++ id'
-      finally (Just <$> action) (delete isolation)
+      finally (Just <$> action) (deleteEntity isolation)
   where 
     id' = "EZCouchIsolation-" ++ id
 
-tryToDelete doc = (const True <$> delete doc) `catch` \e -> case e of
+tryToDelete doc = (const True <$> deleteEntity doc) `catch` \e -> case e of
   OperationException _ -> return False
   _ -> throwIO e

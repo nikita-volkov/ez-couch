@@ -1,5 +1,5 @@
 name:               ez-couch
-version:            0.3.1
+version:            0.4.0
 cabal-version:      >=1.8
 build-type:         Simple
 license:            MIT
@@ -10,7 +10,7 @@ maintainer:         Nikita Volkov <nikita.y.volkov@mail.ru>
 stability:          experimental
 homepage:           https://github.com/nikita-volkov/ez-couch
 bug-reports:        https://github.com/nikita-volkov/ez-couch/issues
-synopsis:           A high level library for working with CouchDB
+synopsis:           A high level static library for working with CouchDB
 description:        EZCouch is a library which takes a mission of bringing the topmost level of abstraction for working with CouchDB from Haskell. It abstracts away from loose concepts of this database and brings a strict static API over standard ADTs. 
 category:           Database, CouchDB
 
@@ -20,13 +20,15 @@ library
   exposed-modules:  EZCouch
   other-modules:    Control.Retry
                     Database.CouchDB.Conduit.View.Query
-                    EZCouch.Doc
+                    EZCouch.Base62
+                    EZCouch.Entity
                     EZCouch.Action
                     EZCouch.WriteAction
                     EZCouch.Design
                     EZCouch.Encoding
                     EZCouch.Ids
                     EZCouch.Isolation
+                    EZCouch.JS
                     EZCouch.Model.Design
                     EZCouch.Model.Isolation
                     EZCouch.Model.View
@@ -38,7 +40,9 @@ library
                     EZCouch.View
                     Network.HTTP.Conduit.Request
                     Util.Logging
-                    Util.PrettyPrint
+                    EZCouch.Model.EntityIsolation
+                    EZCouch.EntityIsolation
+                    EZCouch.Sweeper
   build-depends:    base >= 4.5 && < 5,
                     ghc-prim >= 0.2,
                     time >= 1.4,
@@ -50,7 +54,6 @@ library
                     hslogger >= 1.2,
                     old-locale >= 1.0,
                     text >= 0.11,
-                    syb >= 0.3,
                     containers >= 0.4,
                     unordered-containers >= 0.2,
                     bytestring >= 0.9,
@@ -60,7 +63,9 @@ library
                     resourcet >= 0.3,
                     string-conversions >= 0.2,
                     classy-prelude >= 0.4.4,
-                    classy-prelude-conduit >= 0.4
+                    classy-prelude-conduit >= 0.4,
+                    hashable >= 1.1,
+                    vector 
 
 source-repository head
   type:             git

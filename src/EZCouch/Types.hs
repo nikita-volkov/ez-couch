@@ -1,15 +1,31 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 module EZCouch.Types where
 
 import Prelude ()
 import ClassyPrelude 
+import Data.Aeson
+import GHC.Generics
 
-import Data.Generics
-
+-- | A wrapper for entity values which preserves the information required for
+-- identifying the appropriate documents in the db.
 data Persisted a = Persisted { persistedId :: Text, persistedRev :: Text, persistedValue :: a }
-  deriving (Show, Data, Typeable, Eq, Ord)
+  deriving (Show, Typeable, Eq, Ord, Generic)
+instance (ToJSON a) => ToJSON (Persisted a)
+instance (FromJSON a) => FromJSON (Persisted a)
 
+persistedIdRev :: Persisted a -> IdRev a
+persistedIdRev (Persisted id rev _) = IdRev id rev
+
+persistedIdentified :: Persisted a -> Identified a
+persistedIdentified (Persisted id _ value) = (id, value)
+
+type Identified a = (Text, a)
+identifiedId (id, _) = id
+identifiedValue (_, value) = value
+
+data IdRev a = IdRev Text Text
 
 data EZCouchException 
   = ParsingException Text 
@@ -19,34 +35,6 @@ data EZCouchException
   | ServerException Text
   -- ^ E.g., server provided an unexpected response
   | ConnectionException Text
-  deriving (Show, Data, Typeable)
+  deriving (Show, Typeable)
 instance Exception EZCouchException
 
--- | Identifies a Couch's design and view. The design name is implicitly resolved from the type parameter `a` and becomes the name of this type. The view name however must be specified explicitly.
-newtype View a = View { viewName :: Text }
-  deriving (Show, Data, Typeable, Eq, Ord)
-
-
-data ReadOptions a k
-  = ReadOptions {
-      readOptionsKeys :: Maybe [k],
-      readOptionsView :: Maybe (View a),
-      readOptionsDescending :: Bool,
-      readOptionsLimit :: Maybe Int,
-      readOptionsSkip :: Int
-    }
-  deriving (Show, Data, Typeable, Eq, Ord)
-  
-readOptions :: ReadOptions a Text
-readOptions = ReadOptions Nothing Nothing False Nothing 0
-
-
-data ConnectionSettings 
-  = ConnectionSettings {  
-      connectionSettingsHost :: Text,
-      connectionSettingsPort :: Int,
-      connectionSettingsAuth :: Maybe (Text, Text),
-      connectionSettingsDatabase :: Text
-    }
-
-defaultPort = 5984 :: Int

@@ -4,7 +4,7 @@ module EZCouch.Model.Isolation where
 import Prelude ()
 import ClassyPrelude
 import GHC.Generics
-import EZCouch.Doc
+import EZCouch.Entity
 import Data.Aeson
 import Data.Time
 
@@ -13,5 +13,5 @@ data Isolation
   deriving (Show, Eq, Generic)
 instance ToJSON (Isolation)
 instance FromJSON (Isolation)
-instance Doc (Isolation) where
-  docType = const "EZCouchIsolation"
+instance Entity (Isolation) where
+  entityType = const "EZCouchIsolation"
