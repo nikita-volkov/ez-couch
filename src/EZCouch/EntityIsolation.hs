@@ -56,11 +56,15 @@ isolateEntities :: (MonadAction m, Entity e)
   -> m ([Maybe (Isolation e)])
 isolateEntities timeout entities = do
   till <- Time.addUTCTime (fromIntegral timeout) <$> readTime
-  results <- createIdentifiedEntities $
-    map (entityIsolationId &&& entityIsolationModel till) entities
-  forM (List.zip entities results) $ \r -> case r of
-    (entity, Right isolation) -> return $ Just $ 
-      Isolation (persistedIdRev isolation) (persistedIdentified entity)
+  results <- createIdentifiedEntities
+    $ map (entityIsolationId &&& entityIsolationModel till) entities
+  results <- return 
+    $ List.zipWith (\e r -> (,) <$> pure e <*> r) entities results
+  deleteEntities $ map fst $ rights results
+  forM results $ \r -> case r of
+    Right (entity, isolation) -> do
+      return $ Just
+        $ Isolation (persistedIdRev isolation) (persistedIdentified entity)
     _ -> return Nothing
 
 entityIsolationModel :: (Entity e) 
@@ -107,6 +111,5 @@ deleteIsolation = deleteIsolations . singleton
 deleteIsolations :: (MonadAction m, Entity e)
   => [Isolation e]
   -> m ()
-deleteIsolations isolations = 
-  deleteEntitiesByIdRevs $ map isolationIdRev isolations
+deleteIsolations = deleteEntitiesByIdRevs . map isolationIdRev
 
