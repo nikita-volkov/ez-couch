@@ -10,18 +10,18 @@ import Data.Aeson
 class (ToJSON a, FromJSON a) => Entity a where
   entityType :: a -> Text
 
-  default entityType :: (Generic a, GDoc (Rep a)) => a -> Text
-  entityType = gDocType . from
+  default entityType :: (Generic a, GEntity (Rep a)) => a -> Text
+  entityType = gEntityType . from
 
-class GDoc f where 
-  gDocType :: f a -> Text
+class GEntity f where 
+  gEntityType :: f a -> Text
 
-instance (GDoc a) => GDoc (M1 i c a) where
-  gDocType = gDocType . unM1
+instance (GEntity a) => GEntity (M1 i c a) where
+  gEntityType = gEntityType . unM1
 
-instance (Constructor c) => GDoc (C1 c a) where
-  gDocType = const . pack $ conName (undefined :: t c a p)
+instance (Constructor c) => GEntity (C1 c a) where
+  gEntityType = const . pack $ conName (undefined :: t c a p)
 
-instance (GDoc a, GDoc b) => GDoc (a :+: b) where
-  gDocType (L1 x) = gDocType x
-  gDocType (R1 x) = gDocType x
+instance (GEntity a, GEntity b) => GEntity (a :+: b) where
+  gEntityType (L1 x) = gEntityType x
+  gEntityType (R1 x) = gEntityType x
