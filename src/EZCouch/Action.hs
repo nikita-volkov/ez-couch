@@ -89,6 +89,7 @@ performRequest request = do
     handleHttpException e = case e of
       FailedConnectionException host port -> throwIO $ ConnectionException $ 
         "FailedConnectionException: " ++ pack host ++ " " ++ show port
+      ResponseTimeout -> throwIO $ ConnectionException $ "ResponseTimeout"
       otherwise -> throwIO e
     handleIOException e = throwIO $ ConnectionException $ 
       "IOError: " ++ pack (ioeGetErrorString e)

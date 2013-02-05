@@ -7,6 +7,7 @@ import Prelude ()
 import ClassyPrelude 
 import Data.Aeson
 import GHC.Generics
+import EZCouch.Entity
 
 -- | A wrapper for entity values which preserves the information required for
 -- identifying the appropriate documents in the db.
@@ -20,6 +21,11 @@ persistedIdRev (Persisted id rev _) = IdRev id rev
 
 persistedIdentified :: Persisted a -> Identified a
 persistedIdentified (Persisted id _ value) = (id, value)
+
+persistedIdHashPart :: Entity a => Persisted a -> Text
+persistedIdHashPart (Persisted id _ value) = 
+  fromMaybe undefined $ stripPrefix (entityType value ++ "-") id
+
 
 type Identified a = (Text, a)
 identifiedId (id, _) = id

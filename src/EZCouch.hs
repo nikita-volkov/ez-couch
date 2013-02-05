@@ -41,6 +41,7 @@ module EZCouch (
   isolationEntity,
   -- * Types
   Persisted(..),
+  persistedIdHashPart,
 
   -- * Helpers
   tryOperation,
