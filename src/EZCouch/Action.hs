@@ -85,11 +85,13 @@ performRequest request = do
       | elem code [200, 201, 202, 304] = Nothing
       | otherwise = Just $ SomeException $ StatusCodeException status headers
     exceptionIntervals (ConnectionException {}) = [10^3, 10^6, 10^6*10]
+    exceptionIntervals (ServerException {}) = [10^6, 10^6*10, 10^6*60]
     exceptionIntervals _ = []
     handleHttpException e = case e of
       FailedConnectionException host port -> throwIO $ ConnectionException $ 
         "FailedConnectionException: " ++ pack host ++ " " ++ show port
       ResponseTimeout -> throwIO $ ConnectionException $ "ResponseTimeout"
+      StatusCodeException (Status code msg) _ | code >= 400 -> throwIO $ ServerException $ "Status code " ++ show code ++ ": " ++ decodeUtf8 msg
       otherwise -> throwIO e
     handleIOException e = throwIO $ ConnectionException $ 
       "IOError: " ++ pack (ioeGetErrorString e)
