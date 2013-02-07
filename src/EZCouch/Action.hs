@@ -89,7 +89,6 @@ performRequest request = do
       FailedConnectionException host port -> throwIO $ ConnectionException $ 
         "FailedConnectionException: " ++ pack host ++ " " ++ show port
       ResponseTimeout -> throwIO $ ConnectionException $ "ResponseTimeout"
-      StatusCodeException (Status code msg) _ | code >= 400 -> throwIO $ ServerException $ "Status code " ++ show code ++ ": " ++ decodeUtf8 msg
       otherwise -> throwIO e
     handleIOException e = throwIO $ ConnectionException $ 
       "IOError: " ++ pack (ioeGetErrorString e)
