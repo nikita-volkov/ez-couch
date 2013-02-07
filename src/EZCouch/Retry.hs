@@ -1,10 +1,10 @@
 {-# LANGUAGE NoMonomorphismRestriction, OverloadedStrings #-}
-module Control.Retry where
+module EZCouch.Retry where
 
 import Prelude ()
 import ClassyPrelude
 import Control.Concurrent
-import qualified Util.Logging as Logging
+import EZCouch.Logging
 
 
 retryingEither [] action = action 
@@ -24,9 +24,9 @@ retrying exceptionIntervals action = retrying_ 0
         exceptionInterval = listToMaybe . drop attempt . exceptionIntervals
         processException e 
           | Just i <- exceptionInterval e = do
-              Logging.logM 0 "Control.Retry"
+              logLn 2 
                 $ "Error occurred: " ++ show e ++ ". " 
-                  ++ "Retrying with a " ++ show (i `div` sec) ++ "s delay."
+                ++ "Retrying with a " ++ show (i `div` sec) ++ "s delay."
               unless (i == 0) (liftIO (threadDelay i)) 
               retrying_ (attempt + 1)
           | otherwise = throwIO e

@@ -14,10 +14,8 @@ import EZCouch.Entity
 import EZCouch.ReadAction
 import EZCouch.WriteAction
 import EZCouch.Try
+import EZCouch.Logging
 import qualified EZCouch.Model.EntityIsolation as Model
-import qualified Util.Logging as Logging
-
-logM lvl = Logging.logM lvl "EZCouch.EntityIsolation"
 
 data Isolation e = Isolation {
   isolationIdRev :: IdRev Model.EntityIsolation,

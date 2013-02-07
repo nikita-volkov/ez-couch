@@ -15,8 +15,8 @@ import System.Locale (defaultTimeLocale)
 import Data.Time (getZonedTime, getCurrentTime, formatTime)
 import Control.Concurrent (myThreadId)
 
-logM :: (MonadIO m) => Int -> Text -> Text -> m ()
-logM level logger message = liftIO $ 
+logLn :: (MonadIO m) => Int -> Text -> Text -> m ()
+logLn level logger message = liftIO $ 
   Logger.logM (unpack logger) (levelPriority level) (unpack message)
 
 initialize = initializeWithFormat "$level $time, $logger: $message"

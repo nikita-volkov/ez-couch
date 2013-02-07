@@ -7,15 +7,12 @@ import qualified Data.Time as Time
 
 import EZCouch.Time
 import EZCouch.Types
-import EZCouch.Action hiding (logM)
+import EZCouch.Action
 import EZCouch.ReadAction
 import EZCouch.WriteAction
 import EZCouch.View
 import EZCouch.Model.Isolation as Isolation
-
-import qualified Util.Logging as Logging
-
-logM lvl = Logging.logM lvl "EZCouch.Isolation"
+import EZCouch.Logging
 
 -- | Protect an action from being executed on multiple clients. Can be used to create transactions in a preemptive manner, i.e. instead of performing some actions and rolling back on transaction validation failure it does validation based on the provided identifier prior to actually executing the transaction. This function however does not provide you with atomicity guarantees (<http://en.wikipedia.org/wiki/Atomicity_(database_systems)>), as it does not rollback in case of client-interrupt - it's up to your algorithms to handle those cases.
 inIsolation :: MonadAction m 
@@ -33,18 +30,18 @@ inIsolation timeout id action = do
         Just isolation -> do
           if (Isolation.since . persistedValue) isolation < Time.addUTCTime (negate $ fromIntegral timeout) time
             then do 
-              logM 0 $ "Deleting outdated isolation: " ++ id'
+              logLn 0 $ "Deleting outdated isolation: " ++ id'
               tryToDelete isolation
               inIsolation timeout id action
             else do
-              logM 0 $ "Skipping a busy isolation: " ++ id'
+              logLn 0 $ "Skipping a busy isolation: " ++ id'
               return Nothing
         Nothing -> do
-          logM 0 $ "Skipping a finished isolation: " ++ id'
+          logLn 0 $ "Skipping a finished isolation: " ++ id'
           return Nothing
     Left e -> throwIO e
     Right isolation -> do
-      logM 0 $ "Performing an isolation: " ++ id'
+      logLn 0 $ "Performing an isolation: " ++ id'
       finally (Just <$> action) (deleteEntity isolation)
   where 
     id' = "EZCouchIsolation-" ++ id

@@ -18,8 +18,7 @@ library
   hs-source-dirs:   src
   extensions:       PatternGuards
   exposed-modules:  EZCouch
-  other-modules:    Control.Retry
-                    Database.CouchDB.Conduit.View.Query
+  other-modules:    Database.CouchDB.Conduit.View.Query
                     EZCouch.Base62
                     EZCouch.Entity
                     EZCouch.Action
@@ -34,6 +33,7 @@ library
                     EZCouch.Model.View
                     EZCouch.Parsing
                     EZCouch.ReadAction
+                    EZCouch.Retry
                     EZCouch.Time
                     EZCouch.Try
                     EZCouch.Types
