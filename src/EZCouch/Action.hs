@@ -74,17 +74,16 @@ performRequest request = do
     ++ show (HTTP.method request) 
     ++ " at " ++ show (HTTP.url request)
   (_, manager) <- ask
-  retrying exceptionIntervals $
-    (flip catch) handleIOException $
-      (flip catch) handleHttpException $ 
-        http request manager
+  retrying exceptionIntervals $ http' request manager
   where
-    checkStatus status@(Status code message) headers
-      | elem code [200, 201, 202, 304] = Nothing
-      | otherwise = Just $ SomeException $ StatusCodeException status headers
     exceptionIntervals (ConnectionException {}) = [10^3, 10^6, 10^6*10]
-    exceptionIntervals (ServerException {}) = [10^6, 10^6*10, 10^6*60]
     exceptionIntervals _ = []
+
+http' request manager = 
+  (flip catch) handleIOException $
+    (flip catch) handleHttpException $ 
+      http request manager
+  where
     handleHttpException e = case e of
       FailedConnectionException host port -> throwIO $ ConnectionException $ 
         "FailedConnectionException: " ++ pack host ++ " " ++ show port

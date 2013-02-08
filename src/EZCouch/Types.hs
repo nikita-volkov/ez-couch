@@ -41,7 +41,6 @@ data EZCouchException
   | ResponseException Text
   -- ^ E.g., server provided an unexpected response
   | ConnectionException Text
-  | ServerException Text
   deriving (Show, Typeable)
 instance Exception EZCouchException
 
