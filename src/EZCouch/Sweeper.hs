@@ -21,7 +21,7 @@ import EZCouch.Logging
 
 
 runSweeper = forever $ do
-  logLn 2 $ "Sweeping zombie entity isolations"
+  logLn 2 $ "Running sweeper cycle"
   readZombieEntityIsolations >>= releaseIsolations
   liftIO $ threadDelay $ 10 ^ 6 * 60 * 60 * 24 * 2
 
@@ -38,8 +38,11 @@ readZombieEntityIsolations = do
     False
 
 releaseIsolations isolations = do
-  createIdentifiedEntities $ map idAndValue isolations
-  deleteEntities isolations
+  logLn 1 $ "Sweeping " ++ show (length isolations) ++ " isolations"
+  createIdentifiedEntities $ map entityIdAndValue isolations
+  deleteEntities isolations `catch` \e -> case e of
+    OperationException _ -> return ()
+    e -> throwIO e
 
-idAndValue =
+entityIdAndValue =
   (EntityIsolation.entityId &&& EntityIsolation.entityValue) . persistedValue
