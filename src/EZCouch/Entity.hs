@@ -19,9 +19,9 @@ class GEntity f where
 instance (GEntity a) => GEntity (M1 i c a) where
   gEntityType = gEntityType . unM1
 
-instance (Constructor c) => GEntity (C1 c a) where
-  gEntityType = const . pack $ conName (undefined :: t c a p)
-
+instance (Datatype d) => GEntity (D1 d a) where
+  gEntityType = const . pack $ datatypeName (undefined :: t d a p)
+  
 instance (GEntity a, GEntity b) => GEntity (a :+: b) where
   gEntityType (L1 x) = gEntityType x
   gEntityType (R1 x) = gEntityType x

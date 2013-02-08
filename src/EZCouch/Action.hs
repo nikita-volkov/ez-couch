@@ -5,19 +5,17 @@ import Prelude ()
 import ClassyPrelude.Conduit
 import Control.Exception (SomeException(..))
 import Control.Monad.Reader
-import Control.Retry
 import System.IO.Error (ioeGetErrorString)
 import EZCouch.Types
+import EZCouch.Logging
+import EZCouch.Retry
 import Network.HTTP.Types as HTTP
 import Network.HTTP.Conduit as HTTP
 import Network.HTTP.Conduit.Request as HTTP
 import qualified Database.CouchDB.Conduit.View.Query as CC
 import qualified Blaze.ByteString.Builder as Blaze
-import qualified Util.Logging as Logging
 import qualified Data.Aeson as Aeson
 import qualified Data.Conduit.Attoparsec as Atto
-
-logM lvl = Logging.logM lvl "EZCouch.Action"
 
 
 data ConnectionSettings 
@@ -58,7 +56,7 @@ generateRequest method dbPath qps body = do
         queryString = query,
         requestBody = RequestBodyLBS body,
         checkStatus = checkStatus,
-        responseTimeout = Just $ 10 ^ 6 * 30
+        responseTimeout = Just $ 10 ^ 6 * 5
       }
       where
         authenticated
@@ -72,7 +70,7 @@ performRequest :: (MonadAction m)
   => Request m
   -> m (Response (ResumableSource m ByteString))
 performRequest request = do
-  logM 0 $ "Performing a " 
+  logLn 0 $ "Performing a " 
     ++ show (HTTP.method request) 
     ++ " at " ++ show (HTTP.url request)
   (_, manager) <- ask
@@ -85,6 +83,7 @@ performRequest request = do
       | elem code [200, 201, 202, 304] = Nothing
       | otherwise = Just $ SomeException $ StatusCodeException status headers
     exceptionIntervals (ConnectionException {}) = [10^3, 10^6, 10^6*10]
+    exceptionIntervals (ServerException {}) = [10^6, 10^6*10, 10^6*60]
     exceptionIntervals _ = []
     handleHttpException e = case e of
       FailedConnectionException host port -> throwIO $ ConnectionException $ 

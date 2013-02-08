@@ -14,10 +14,8 @@ import EZCouch.Entity
 import EZCouch.ReadAction
 import EZCouch.WriteAction
 import EZCouch.Try
+import EZCouch.Logging
 import qualified EZCouch.Model.EntityIsolation as Model
-import qualified Util.Logging as Logging
-
-logM lvl = Logging.logM lvl "EZCouch.EntityIsolation"
 
 data Isolation e = Isolation {
   isolationIdRev :: IdRev Model.EntityIsolation,
@@ -46,7 +44,7 @@ isolateEntity timeout persisted = do
   results <- isolateEntities timeout . singleton $ persisted
   case results of
     [result] -> return result
-    _ -> throwIO $ ServerException $ "EZCouch.EntityIsolation.isolateEntity"
+    _ -> throwIO $ ResponseException $ "EZCouch.EntityIsolation.isolateEntity"
 
 -- | Does the same as `isolateEntity` but for multiple entities and in a single
 -- request.
@@ -87,7 +85,7 @@ releaseIsolation :: (MonadAction m, Entity e)
 releaseIsolation = 
   releaseIsolations . singleton >=> maybe fail return . listToMaybe
   where
-    fail = throwIO $ ServerException "EZCouch.EntityIsolation.releaseIsolation"
+    fail = throwIO $ ResponseException "EZCouch.EntityIsolation.releaseIsolation"
 
 releaseIsolations :: (MonadAction m, Entity e)
   => [Isolation e]

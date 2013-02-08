@@ -20,7 +20,7 @@ getHeadersTime ((name, value) : tail)
     Just time -> return time
     Nothing -> throwIO $ ParsingException $ "Couldn't parse date: `" ++ decodeUtf8 value ++ "`"
   | otherwise = getHeadersTime tail
-getHeadersTime _ = throwIO $ ServerException "No date header in response"
+getHeadersTime _ = throwIO $ ResponseException "No date header in response"
 
 toTime = parseTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S %Z" 
   . unpack . asText . decodeUtf8

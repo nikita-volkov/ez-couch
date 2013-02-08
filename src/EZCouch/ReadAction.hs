@@ -8,6 +8,7 @@ import EZCouch.Entity
 import EZCouch.Types
 import EZCouch.Parsing
 import EZCouch.View
+import EZCouch.Logging
 import qualified EZCouch.Encoding as Encoding
 import qualified Database.CouchDB.Conduit.View.Query as CC
 import qualified System.Random as Random
@@ -39,6 +40,9 @@ readAction view mode skip limit desc includeDocs =
     HTTP.StatusCodeException (HTTP.Status code _) _ 
       | code `elem` [404, 500] 
       -> do
+        logLn 2 $ "View " 
+          ++ fromMaybe undefined (viewGeneratedName view) 
+          ++ " does not exist. Generating."
         createOrUpdateView view 
         action path qps body
     _ -> throwIO e

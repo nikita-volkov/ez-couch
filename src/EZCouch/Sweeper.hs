@@ -17,11 +17,11 @@ import EZCouch.View
 import EZCouch.Model.EntityIsolation (EntityIsolation)
 import qualified EZCouch.Model.EntityIsolation as EntityIsolation
 import EZCouch.Isolation
-import qualified Util.Logging as Logging
+import EZCouch.Logging 
 
 
 runSweeper = forever $ do
-  Logging.logM 0 "EZCouch.Sweeper" $ "Sweeping zombie entity isolations"
+  logLn 2 $ "Sweeping zombie entity isolations"
   readZombieEntityIsolations >>= releaseIsolations
   liftIO $ threadDelay $ 10 ^ 6 * 60 * 60 * 24 * 2
 
