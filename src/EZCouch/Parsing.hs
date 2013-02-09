@@ -97,6 +97,7 @@ maybePersistedByKeyParser o @ (Aeson.Object m)
     = Left $ unexpectedJSONValue o
 
 
+
 fromJSON' json = case fromJSON json of
   Aeson.Success z -> Right $ z
   Aeson.Error s -> Left $ "fromJSON failed with a message `" 

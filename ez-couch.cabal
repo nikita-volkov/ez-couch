@@ -44,6 +44,8 @@ library
                     EZCouch.EntityIsolation
                     EZCouch.Sweeper
                     EZCouch.Logging
+                    EZCouch.Model.Error
+                    EZCouch.Crash
   build-depends:    base >= 4.5 && < 5,
                     ghc-prim >= 0.2,
                     time >= 1.4,

@@ -9,6 +9,7 @@ import EZCouch.Action
 import EZCouch.Types
 import EZCouch.Entity
 import EZCouch.Parsing
+import EZCouch.Crash
 import qualified EZCouch.Encoding as Encoding
 import qualified Database.CouchDB.Conduit.View.Query as CC
 import Data.Aeson as Aeson
@@ -23,8 +24,10 @@ writeOperationsAction :: (MonadAction m, ToJSON a)
   -> m [(Text, Maybe Text)]
   -- ^ Maybe rev by id. Nothing on failure.
 writeOperationsAction ops =
-  postAction path qps body >>= 
-    runParser (rowsParser2 >=> mapM idRevParser . toList)
+  postAction path qps body >>= \r -> case r of
+    ResponseNotFound -> crash $ "EZCouch.WriteAction.writeOperationsAction: unexpected Not Found response"
+    ResponseOk json -> 
+      runParser (rowsParser2 >=> mapM idRevParser . toList) json
   where
     path = ["_bulk_docs"]
     qps = []
