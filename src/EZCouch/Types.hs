@@ -41,7 +41,9 @@ data EZCouchException
   | ResponseException Text
   -- ^ E.g., server provided an unexpected response
   | ConnectionException Text
+  -- ^ Either a connection got closed or a timeout passed
   | ServerException Text
+  -- ^ A weird status 500 response
   deriving (Show, Typeable)
 instance Exception EZCouchException
 

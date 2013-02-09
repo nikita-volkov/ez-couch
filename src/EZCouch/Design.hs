@@ -23,14 +23,14 @@ import qualified EZCouch.Model.View as View
 readDesign :: (MonadAction m, Entity a) => m (Maybe (Persisted (Design a)))
 readDesign = result
   where
-    result = (flip catch) processException $ 
-      getAction ["_design", designName] [] "" 
-        >>= runParser errorPersistedParser
-        >>= return . either (const Nothing) Just
+    result = do
+      getAction ["_design", designName] [] "" >>= \r -> case r of
+        ResponseNotFound -> return Nothing
+        ResponseOk json -> 
+          runParser errorPersistedParser json 
+            >>= return . either (const Nothing) Just
       where
         designName = entityType $ (undefined :: m (Maybe (Persisted (Design a))) -> a) result
-        processException (HTTP.StatusCodeException (HTTP.Status 404 _) _) = return Nothing
-        processException e = throwIO e
 
 createOrUpdateDesign :: (MonadAction m, Entity a) => Design a -> m (Persisted (Design a))
 createOrUpdateDesign design = 
