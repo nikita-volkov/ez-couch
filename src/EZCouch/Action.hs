@@ -131,7 +131,9 @@ processResponse response@(HTTP.Response (HTTP.Status code msg) _ headers body) =
       json <- body $$+- Atto.sinkParser Aeson.json
       case Aeson.fromJSON json of
         Aeson.Success (Error.Error "error" (Just reason) _)
-          | isPrefixOf "{{try_clause,{not_found,missing}}" reason
+          | isPrefixOf "{{try_clause,{not_found,missing}}" reason 
+          -> return ResponseNotFound
+        Aeson.Success (Error.Error "not_found" (Just reason) _)
           -> return ResponseNotFound
         Aeson.Success _ -> 
           throwIO $ ServerException $ "Status " ++ show code ++ " response: " ++ (decodeUtf8 . toStrict . Aeson.encode) json
