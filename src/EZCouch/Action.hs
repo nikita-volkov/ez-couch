@@ -10,6 +10,7 @@ import EZCouch.Types
 import EZCouch.Logging
 import EZCouch.Retry
 import EZCouch.Crash
+import Data.Time
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.HTTP.Conduit as HTTP
 import qualified Network.HTTP.Conduit.Request as HTTP
@@ -29,11 +30,12 @@ data ConnectionSettings
 
 defaultPort = 5984 :: Int
 
+type Environment = (ConnectionSettings, HTTP.Manager, NominalDiffTime)
 
 -- | All EZCouch operations are performed in this monad.
-class (MonadBaseControl IO m, MonadResource m, MonadReader (ConnectionSettings, HTTP.Manager) m) => MonadAction m where
+class (MonadBaseControl IO m, MonadResource m, MonadReader Environment m) => MonadAction m where
 
-instance (MonadResource m, MonadBaseControl IO m) => MonadAction (ReaderT (ConnectionSettings, HTTP.Manager) m) 
+instance (MonadResource m, MonadBaseControl IO m) => MonadAction (ReaderT Environment m) 
 
 generateRequest :: (MonadAction m) 
   => HTTP.Method
@@ -42,7 +44,7 @@ generateRequest :: (MonadAction m)
   -> LByteString
   -> m (HTTP.Request m)
 generateRequest method dbPath qps body = do
-  (settings, _) <- ask
+  (settings, _, _) <- ask
   return $ settingsRequest settings
   where
     headers = [("Content-Type", "application/json")]
@@ -71,7 +73,7 @@ performRequest request = do
   logLn 0 $ "Performing a " 
     ++ show (HTTP.method request) 
     ++ " at " ++ show (HTTP.url request)
-  (_, manager) <- ask
+  (_, manager, _) <- ask
   retrying exceptionIntervals $ 
     processResponse =<< http' request manager
   where
