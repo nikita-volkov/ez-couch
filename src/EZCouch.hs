@@ -80,12 +80,12 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Resource
 import qualified Network.HTTP.Conduit as HTTP
 
+
 runWithManager manager settings action = 
   flip runReaderT (settings, manager, fromIntegral 0) $ runResourceT $ do
     timeDeviation <- lift $ getTimeDeviation
-    withTimeDeviation timeDeviation $ do
-      resourceForkIO $ lift $ Sweeper.runSweeper
-      lift $ action
+    resourceForkIO $ lift $ withTimeDeviation timeDeviation $ Sweeper.runSweeper
+    lift $ withTimeDeviation timeDeviation $ action
 
 run settings action = HTTP.withManager $ \manager -> 
   runWithManager manager settings action
