@@ -82,10 +82,11 @@ import qualified Network.HTTP.Conduit as HTTP
 
 
 runWithManager manager settings action = 
-  flip runReaderT (settings, manager, fromIntegral 0) $ runResourceT $ do
-    timeDeviation <- lift $ getTimeDeviation
-    resourceForkIO $ lift $ withTimeDeviation timeDeviation $ Sweeper.runSweeper
-    lift $ withTimeDeviation timeDeviation $ action
+  flip runReaderT (settings, manager, fromIntegral 0) $ do
+    timeDeviation <- getTimeDeviation
+    withTimeDeviation timeDeviation $ runResourceT $ do
+      resourceForkIO $ lift $ Sweeper.runSweeper
+      lift $ action
 
 run settings action = HTTP.withManager $ \manager -> 
   runWithManager manager settings action
