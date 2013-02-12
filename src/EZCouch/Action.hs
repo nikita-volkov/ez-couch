@@ -77,8 +77,8 @@ performRequest request = do
   retrying exceptionIntervals $ 
     processResponse =<< http' request manager
   where
-    exceptionIntervals (ConnectionException {}) = [10^3, 10^6, 10^6*10]
-    exceptionIntervals (ServerException {}) = [10^3, 10^6, 10^6*10]
+    exceptionIntervals (ConnectionException {}) = [10^3, 10^6, 10^6*5]
+    exceptionIntervals (ServerException {}) = [10^3, 10^6, 10^6*5]
     exceptionIntervals _ = []
 
 http' request manager = 
@@ -140,7 +140,7 @@ processResponse response@(HTTP.Response (HTTP.Status code msg) _ headers body) =
         Aeson.Success _ -> 
           throwIO $ ServerException $ "Status " ++ show code ++ " response: " ++ (decodeUtf8 . toStrict . Aeson.encode) json
         Aeson.Error m -> 
-          crash $ (pack) m ++ ". Response body: " ++ (toStrict . decodeUtf8 . Aeson.encode) json
+          throwIO $ ServerException $ "Status " ++ show code
     _ | code >= 400 ->
       crash $ "Unexpected status code: " ++ show code ++ ", " ++ (decodeUtf8) msg
     _ -> return $ ResponseOk response
