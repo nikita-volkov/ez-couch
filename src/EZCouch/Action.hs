@@ -77,8 +77,8 @@ performRequest request = do
   retrying exceptionIntervals $ 
     processResponse =<< http' request manager
   where
-    exceptionIntervals (ConnectionException {}) = [10^3, 10^6, 10^6*5]
-    exceptionIntervals (ServerException {}) = [10^3, 10^6, 10^6*5]
+    exceptionIntervals (ConnectionException {}) = [0]
+    exceptionIntervals (ServerException {}) = [0]
     exceptionIntervals _ = []
 
 http' request manager = 
