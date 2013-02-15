@@ -65,8 +65,8 @@ library
                     random >= 1.0,
                     resourcet >= 0.3,
                     string-conversions >= 0.2,
-                    classy-prelude >= 0.4.4,
-                    classy-prelude-conduit >= 0.4,
+                    classy-prelude >= 0.5.0,
+                    classy-prelude-conduit,
                     hashable >= 1.1,
                     vector 
 
