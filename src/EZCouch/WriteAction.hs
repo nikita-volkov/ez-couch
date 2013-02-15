@@ -118,4 +118,4 @@ updateEntity = return . singleton >=> updateEntities >=>
     
 lookupThrowing id cache = case lookup id cache of
   Just val -> return val
-  Nothing -> throwIO $ ParsingException $ "Unexpected id: " ++ show id
+  Nothing -> throwIO $ ResponseException $ "Unexpected id: " ++ show id
