@@ -10,7 +10,9 @@ import Control.Monad.Reader
 import EZCouch.Types
 import EZCouch.Action
 
--- | Current time according to server.
+-- | Current time according to server. This function doesn't actually emit any
+-- requests to the server, calculating the value from a deviation of local time
+-- from server time determined at the beginning of the EZCouch session.
 readTime :: MonadAction m => m UTCTime 
 readTime = do
   (_, _, deviation) <- ask
