@@ -48,6 +48,7 @@ module EZCouch (
 
   -- * Execution Monad
   MonadAction,
+  Environment,
   run,
   runWithManager,
   ConnectionSettings(..),
@@ -80,11 +81,13 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Resource
 import qualified Network.HTTP.Conduit as HTTP
 
+
 runWithManager manager settings action = 
-  flip runReaderT (settings, manager) $ runResourceT $ do
-    resourceForkIO $ lift $ Sweeper.runSweeper
-    lift $ action
+  flip runReaderT (settings, manager, fromIntegral 0) $ do
+    timeDeviation <- getTimeDeviation
+    withTimeDeviation timeDeviation $ runResourceT $ do
+      resourceForkIO $ lift $ Sweeper.runSweeper
+      lift $ action
 
 run settings action = HTTP.withManager $ \manager -> 
   runWithManager manager settings action
-

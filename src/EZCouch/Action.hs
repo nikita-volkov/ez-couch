@@ -10,6 +10,7 @@ import EZCouch.Types
 import EZCouch.Logging
 import EZCouch.Retry
 import EZCouch.Crash
+import Data.Time
 import qualified Network.HTTP.Types as HTTP
 import qualified Network.HTTP.Conduit as HTTP
 import qualified Network.HTTP.Conduit.Request as HTTP
@@ -29,11 +30,12 @@ data ConnectionSettings
 
 defaultPort = 5984 :: Int
 
+type Environment = (ConnectionSettings, HTTP.Manager, NominalDiffTime)
 
 -- | All EZCouch operations are performed in this monad.
-class (MonadBaseControl IO m, MonadResource m, MonadReader (ConnectionSettings, HTTP.Manager) m) => MonadAction m where
+class (MonadBaseControl IO m, MonadResource m, MonadReader Environment m) => MonadAction m where
 
-instance (MonadResource m, MonadBaseControl IO m) => MonadAction (ReaderT (ConnectionSettings, HTTP.Manager) m) 
+instance (MonadResource m, MonadBaseControl IO m) => MonadAction (ReaderT Environment m) 
 
 generateRequest :: (MonadAction m) 
   => HTTP.Method
@@ -42,7 +44,7 @@ generateRequest :: (MonadAction m)
   -> LByteString
   -> m (HTTP.Request m)
 generateRequest method dbPath qps body = do
-  (settings, _) <- ask
+  (settings, _, _) <- ask
   return $ settingsRequest settings
   where
     headers = [("Content-Type", "application/json")]
@@ -71,12 +73,12 @@ performRequest request = do
   logLn 0 $ "Performing a " 
     ++ show (HTTP.method request) 
     ++ " at " ++ show (HTTP.url request)
-  (_, manager) <- ask
+  (_, manager, _) <- ask
   retrying exceptionIntervals $ 
     processResponse =<< http' request manager
   where
-    exceptionIntervals (ConnectionException {}) = [10^3, 10^6, 10^6*10]
-    exceptionIntervals (ServerException {}) = [10^3, 10^6, 10^6*10]
+    exceptionIntervals (ConnectionException {}) = map (*10^6) [0, 1, 5]
+    exceptionIntervals (ServerException {}) = map (*10^6) [0, 1, 5]
     exceptionIntervals _ = []
 
 http' request manager = 
@@ -138,7 +140,7 @@ processResponse response@(HTTP.Response (HTTP.Status code msg) _ headers body) =
         Aeson.Success _ -> 
           throwIO $ ServerException $ "Status " ++ show code ++ " response: " ++ (decodeUtf8 . toStrict . Aeson.encode) json
         Aeson.Error m -> 
-          crash $ (pack) m ++ ". Response body: " ++ (toStrict . decodeUtf8 . Aeson.encode) json
+          throwIO $ ServerException $ "Status " ++ show code
     _ | code >= 400 ->
       crash $ "Unexpected status code: " ++ show code ++ ", " ++ (decodeUtf8) msg
     _ -> return $ ResponseOk response

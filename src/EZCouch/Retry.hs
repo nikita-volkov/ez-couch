@@ -7,16 +7,6 @@ import Control.Concurrent
 import EZCouch.Logging
 
 
-retryingEither [] action = action 
-retryingEither (i:is) action = action >>= processResult
-  where 
-    processResult (Left _) 
-      | i == 0 = retryingEither is action
-      | otherwise = liftIO (threadDelay i) >> retryingEither is action
-    processResult r = return r
-
-retryingEither' = retryingEither defaultIntervals
-
 retrying exceptionIntervals action = retrying_ 0
   where
     retrying_ attempt = catch action processException

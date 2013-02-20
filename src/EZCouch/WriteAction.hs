@@ -61,7 +61,7 @@ deleteEntity = deleteEntities . singleton
 
 createIdentifiedEntities :: (MonadAction m, ToJSON a) 
   => [Identified a]
-  -> m [Either (Text, a) (Persisted a)]
+  -> m [Either (Identified a) (Persisted a)]
 createIdentifiedEntities idsToVals 
   = writeOperationsAction [Create id val | (id, val) <- idsToVals]
       >>= mapM convertResult
@@ -118,4 +118,4 @@ updateEntity = return . singleton >=> updateEntities >=>
     
 lookupThrowing id cache = case lookup id cache of
   Just val -> return val
-  Nothing -> throwIO $ ParsingException $ "Unexpected id: " ++ show id
+  Nothing -> throwIO $ ResponseException $ "Unexpected id: " ++ show id

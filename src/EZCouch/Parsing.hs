@@ -3,8 +3,6 @@ module EZCouch.Parsing where
 
 import Prelude ()
 import ClassyPrelude
-import Control.Monad.Trans.Resource
-import qualified Data.Text.Lazy as Text
 import EZCouch.Types
 import Data.Aeson as Aeson 
 
@@ -16,12 +14,12 @@ runParser parser response =
 rowsParser1 :: Parser (Vector Aeson.Value)
 rowsParser1 json
   | Just (Aeson.Array rows) <- json .? "rows" = Right rows
-  | otherwise = Left $ unexpectedJSONValue json
+  | otherwise = Left $ unexpectedJSONValue "rowsParser1" json
 
 rowsParser2 :: Parser (Vector Aeson.Value)
 rowsParser2 json
   | Aeson.Array rows <- json = Right rows
-  | otherwise = Left $ unexpectedJSONValue json
+  | otherwise = Left $ unexpectedJSONValue "rowsParser2" json
 
 idRevParser :: Parser (Text, Maybe Text)
 idRevParser o @ (Aeson.Object m) 
@@ -33,7 +31,7 @@ idRevParser o @ (Aeson.Object m)
     Just id <- lookup "id" m
     = (,) <$> fromJSON' id <*> pure Nothing
   | otherwise
-    = Left $ unexpectedJSONValue o
+    = Left $ unexpectedJSONValue "idRevParser" o
 
 keyExistsParser :: (FromJSON k) => Parser (k, Bool)
 keyExistsParser o @ (Aeson.Object m) 
@@ -49,7 +47,7 @@ keyExistsParser o @ (Aeson.Object m)
     Just key <- lookup "key" m
     = (,) <$> fromJSON' key <*> pure True
   | otherwise
-    = Left $ unexpectedJSONValue o
+    = Left $ unexpectedJSONValue "keyExistsParser" o
 
 persistedParser :: (FromJSON a) => Parser (Maybe (Persisted a))
 persistedParser o
@@ -59,8 +57,10 @@ persistedParser o
     Just doc <- o .? "doc",
     Just rev <- doc .? "_rev"
     = fmap Just $ Persisted <$> fromJSON' id <*> fromJSON' rev <*> fromJSON' doc
+  | o .? "doc" == Just Aeson.Null
+    = Right Nothing
   | otherwise
-    = Left $ unexpectedJSONValue o
+    = Left $ unexpectedJSONValue "persistedParser" o
 
 errorPersistedParser :: (FromJSON a) => Parser (Either (Text, Text) (Persisted a))
 errorPersistedParser o @ (Aeson.Object m) 
@@ -70,7 +70,7 @@ errorPersistedParser o @ (Aeson.Object m)
   | Just error <- lookup "error" m, Just reason <- lookup "reason" m
     = fmap Left $ (,) <$> fromJSON' error <*> fromJSON' reason 
   | otherwise
-    = Left $ unexpectedJSONValue o
+    = Left $ unexpectedJSONValue "errorPersistedParser" o
 
 maybePersistedByKeyParser :: (FromJSON a, FromJSON k) => Parser (k, Maybe (Persisted a))
 maybePersistedByKeyParser o @ (Aeson.Object m) 
@@ -94,7 +94,7 @@ maybePersistedByKeyParser o @ (Aeson.Object m)
     Just key <- lookup "key" m
     = (,) <$> fromJSON' key <*> pure Nothing
   | otherwise
-    = Left $ unexpectedJSONValue o
+    = Left $ unexpectedJSONValue "maybePersistedByKeyParser" o
 
 
 
@@ -103,10 +103,12 @@ fromJSON' json = case fromJSON json of
   Aeson.Error s -> Left $ "fromJSON failed with a message `" 
     ++ fromString s 
     ++ "` on the following value: " 
-    ++ (Text.toStrict . decodeUtf8 $ Aeson.encode json) 
+    ++ (toStrict . decodeUtf8 $ Aeson.encode json) 
 
-unexpectedJSONValue json = 
-  "Unexpected JSON value: " ++ (Text.toStrict . decodeUtf8 $ Aeson.encode json)
+unexpectedJSONValue parserName json = 
+  parserName ++ ": "
+    ++ "Unexpected JSON value: " 
+    ++ (toStrict . decodeUtf8 $ Aeson.encode json)
 
 o .? k = pure o ?.? k
 o ?.? k = o >>= objectKey k
