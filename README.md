@@ -1,6 +1,6 @@
 #EZCouch. A high level static library for working with CouchDB
 
-For people with a Haskell background a schemaless database interfaced with dynamic JavaScript, which CouchDB is, may seem like a perfect opportunity to shoot themselves in the foot. This library approaches the issue by providing a completely static API over ADTs for it. 
+For a developer with a Haskell background a schemaless database interfaced with dynamic JavaScript, which CouchDB is, may seem like a perfect opportunity to shoot himself in the foot. This library approaches the issue by providing a static API over ADTs for it. 
 
 EZCouch protects you on a typelevel from doing silly mistakes such as forgetting to generate a view or mistyping its name. In fact, it generates and manages views for you. It also approaches other important issues, such as Random Fetching and Transactions. For more info please refer to the library's [API](http://hackage.haskell.org/package/ez-couch).
 
