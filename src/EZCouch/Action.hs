@@ -58,7 +58,7 @@ generateRequest method dbPath qps body = do
         HTTP.path = packPath $ maybe [] (database : ) $ dbPath,
         HTTP.queryString = query,
         HTTP.requestBody = HTTP.RequestBodyLBS body,
-        HTTP.checkStatus = \_ _ -> Nothing,
+        HTTP.checkStatus = \_ _ _ -> Nothing,
         HTTP.responseTimeout = Just $ 10 ^ 6 * 5
       }
       where
@@ -125,12 +125,12 @@ data Response r =
 
 processResponse :: MonadAction m
   => HTTP.Response (UnparsedBody m) -> m (Response (HTTP.Response (UnparsedBody m)))
-processResponse response@(HTTP.Response (HTTP.Status code msg) _ headers body) =
-  case code of
+processResponse response =
+  case HTTP.statusCode . HTTP.responseStatus $ response of
     -- Handle status 500 by extracting a possible "Not found response" or 
     -- throwing a ServerException otherwise
-    _ | code `elem` [404, 500] -> do
-      json <- body $$+- Atto.sinkParser Aeson.json
+    code | code `elem` [404, 500] -> do
+      json <- HTTP.responseBody response $$+- Atto.sinkParser Aeson.json
       case Aeson.fromJSON json of
         Aeson.Success (Error.Error "error" (Just reason) _)
           | isPrefixOf "{{try_clause,{not_found,missing}}" reason 
@@ -141,6 +141,6 @@ processResponse response@(HTTP.Response (HTTP.Status code msg) _ headers body) =
           throwIO $ ServerException $ "Status " ++ show code ++ " response: " ++ (decodeUtf8 . toStrict . Aeson.encode) json
         Aeson.Error m -> 
           throwIO $ ServerException $ "Status " ++ show code
-    _ | code >= 400 ->
-      crash $ "Unexpected status code: " ++ show code ++ ", " ++ (decodeUtf8) msg
+    code | code >= 400 ->
+      crash $ "Unexpected status code: " ++ show code ++ ", " ++ (decodeUtf8 . HTTP.statusMessage . HTTP.responseStatus $ response)
     _ -> return $ ResponseOk response
