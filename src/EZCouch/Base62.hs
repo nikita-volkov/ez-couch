@@ -13,16 +13,16 @@ chars = ['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z']
 charsVector = asVector . fromList $ chars
 charsLength = fromIntegral $ length charsVector
 
--- | Produces individual values for the whole range of ints including negatives. If you know that the value will allways be positive use `encodeUnsigned` instead.
-encodeSigned64 = encodeUnsigned . zzEncode64 
+-- | Produces individual values for the whole range of ints including negatives. If you know that the value will allways be positive use `fromUnsigned64` instead.
+fromSigned64 = fromUnsigned64 . zzEncode64 
 
-encodeUnsigned 0 = charsVector ! 0 : []
-encodeUnsigned a = if a >= 0
-  then reverse . encodeUnsigned' $ a
-  else error $ "EZCouch.Base62.encodeUnsigned: Negative value: " ++ show a
+fromUnsigned64 0 = charsVector ! 0 : []
+fromUnsigned64 a = if a >= 0
+  then reverse . fromUnsigned64' $ a
+  else error $ "EZCouch.Base62.fromUnsigned64: Negative value: " ++ show a
   where
-    encodeUnsigned' 0 = []
-    encodeUnsigned' a = charsVector ! fromIntegral c : encodeUnsigned' b
+    fromUnsigned64' 0 = []
+    fromUnsigned64' a = charsVector ! fromIntegral c : fromUnsigned64' b
       where
         b = div a charsLength 
         c = mod a charsLength

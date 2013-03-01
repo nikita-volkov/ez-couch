@@ -8,11 +8,11 @@ import EZCouch.Base62
 
 getPicos = getPOSIXTime >>= return . round . (* 1000000)
 getRndSuffix l = (randomRIO (0, charsLength ^ l) :: IO Word64) >>= 
-  return . zeroPad l . encodeUnsigned
+  return . zeroPad l . fromUnsigned64
   where 
     zeroPad l s = (replicate (l - length s) '0') ++ s  
 
-generateId = (++) <$> fmap encodeUnsigned getPicos <*> getRndSuffix 3 
+generateId = (++) <$> fmap fromUnsigned64 getPicos <*> getRndSuffix 3 
 
 main = do
   generateId >>= putStrLn . pack

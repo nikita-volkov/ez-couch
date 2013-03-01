@@ -111,7 +111,7 @@ instance Hashable (View entity keys) where
 viewGeneratedName :: View a k -> Maybe Text
 viewGeneratedName view = case view of
   ViewById -> Nothing
-  view -> Just $ pack . Base62.encodeSigned64 . fromIntegral . hash $ view
+  view -> Just $ pack . Base62.fromSigned64 . fromIntegral . hash $ view
 
 viewDocType :: (Entity a) => View a k -> Text
 viewDocType = entityType . (undefined :: View a k -> a)
