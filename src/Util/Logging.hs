@@ -43,7 +43,8 @@ levelPriority level = case level of
   6 -> ALERT
   x | x >= 7 -> EMERGENCY
 
-priorityLevel p = fromMaybe undefined $ find ((==) p . levelPriority) [0..7]
+priorityLevel p = fromMaybe fail $ find ((==) p . levelPriority) [0..7]
+  where fail = error $ "Unexpected priority " ++ show p
 
 formatter format h (prio, msg) loggername 
   = replaceVarM 
