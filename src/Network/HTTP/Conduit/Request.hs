@@ -5,6 +5,7 @@ import Prelude ()
 import ClassyPrelude
 import Network.HTTP.Conduit
 import Network.HTTP.Types
+import qualified Network.TLS as TLS
 
 withHeader (name, value) request
   = request { requestHeaders = headers' }
@@ -41,9 +42,15 @@ withResponseTimeout timeout request
   = request { responseTimeout = timeout }
   
 fixedHTTP request manager 
-  = http request manager `catch` handleIOException
+  = flip catch handleTLSHandshakeFailed $
+      flip catch handleIOException $
+        http request manager
   where
     handleIOException (e :: IOException) = throwIO 
+      $ FailedConnectionException 
+          (unpack $ decodeUtf8 $ host request) 
+          (port request)
+    handleTLSHandshakeFailed (e :: TLS.HandshakeFailed) = throwIO 
       $ FailedConnectionException 
           (unpack $ decodeUtf8 $ host request) 
           (port request)
