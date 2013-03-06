@@ -8,6 +8,7 @@ import ClassyPrelude
 import Data.Aeson
 import GHC.Generics
 import EZCouch.Entity
+import EZCouch.Crash
 
 -- | A wrapper for entity values which preserves the information required for
 -- identifying the appropriate documents in the db.
@@ -24,7 +25,8 @@ persistedIdentified (Persisted id _ value) = (id, value)
 
 persistedIdHashPart :: Entity a => Persisted a -> Text
 persistedIdHashPart (Persisted id _ value) = 
-  fromMaybe undefined $ stripPrefix (entityType value ++ "-") id
+  fromMaybe (crash $ "Unexpected id: " ++ show id) $ 
+    stripPrefix (entityType value ++ "-") id
 
 
 type Identified a = (Text, a)

@@ -109,5 +109,6 @@ deleteIsolation = deleteIsolations . singleton
 deleteIsolations :: (MonadAction m, Entity e)
   => [Isolation e]
   -> m ()
-deleteIsolations = deleteEntitiesByIdRevs . map isolationIdRev
+deleteIsolations = 
+  void . tryOperation . deleteEntitiesByIdRevs . map isolationIdRev
 

@@ -10,6 +10,7 @@ import EZCouch.Entity
 import EZCouch.Types
 import EZCouch.Design 
 import EZCouch.WriteAction
+import EZCouch.Crash
 import qualified Control.Monad as Monad
 import qualified Data.Foldable as Foldable
 import qualified EZCouch.Model.Design as DesignModel
@@ -142,8 +143,8 @@ viewMapFunctionJS view = fmap concat $ sequence [
 viewPath :: (Entity a) => View a k -> [Text]
 viewPath view = case view of
   ViewById -> ["_all_docs"]
-  _ -> ["_design", fromMaybe undefined $ viewDesignName view, 
-        "_view", fromMaybe undefined $ viewGeneratedName view]
+  _ -> ["_design", fromMaybe (crash "No view design") $ viewDesignName view, 
+        "_view", fromMaybe (crash "No view name") $ viewGeneratedName view]
 
 createOrUpdateView :: (MonadAction m, Entity a) 
   => View a k 

@@ -41,7 +41,7 @@ readAction view mode skip limit desc includeDocs = do
   case result of
     ResponseNotFound -> do
       logLn 2 $ "View " 
-        ++ fromMaybe undefined (viewGeneratedName view) 
+        ++ fromMaybe (crash "Unnamed view") (viewGeneratedName view) 
         ++ " does not exist. Generating."
       createOrUpdateView view 
       action path qps body >>= \r -> case r of
