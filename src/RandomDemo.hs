@@ -28,7 +28,7 @@ import EZCouch
 -- Connection settings for connecting to a locally running CouchDB with an
 -- existing database named "test" configured to provide free permissions to 
 -- unauthenticated users.
-connection = ConnectionSettings {
+connectionSettings = ConnectionSettings {
   connectionSettingsHost = "127.0.0.1",
   connectionSettingsPort = defaultPort,
   connectionSettingsAuth = Nothing,
@@ -50,7 +50,7 @@ instance Entity A
 -- Execute our program by running actions in the EZCouch's `MonadAction`.
 -- First we regenerate all the entities in the db and then subsequently fetch
 -- and print random ones from it.
-main = run connection $ do
+main = run connectionSettings $ do
   regenerateAs
   printRandomAs
   printRandomAs
