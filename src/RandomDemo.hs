@@ -55,14 +55,10 @@ main = run connectionSettings $ do
   printRandomAs
   printRandomAs
   printRandomAs
-  readEntities fancyView KeysSelectionAll 0 Nothing False
-
-fancyView :: View A (Double, Int, Text)
-fancyView = 
-  ViewByKeys3
-    (ViewKeyValue $ PathField "c" $ PathItem PathNil)
-    (ViewKeyValue $ PathField "a" PathNil)
-    (ViewKeyValue $ PathField "b" PathNil)
+  liftIO $ print $ readEntities fancyView 
+    (KeysSelectionRangeStart $ (0, 3, ""))
+    0 Nothing False
+  liftIO $ print $ readEntities fancyView2 KeysSelectionAll 0 Nothing False
 
 regenerateAs = do
   -- Fetch all existing entities of type `A`.
@@ -80,3 +76,16 @@ printRandomAs = do
     "Got " 
       ++ (show $ length as) ++ " random results: " 
       ++ (show $ map persistedId as)
+
+fancyView :: View A (Double, Int, Text)
+fancyView = 
+  ViewByKeys3
+    (ViewKeyValue $ PathField "c" $ PathItem PathNil)
+    (ViewKeyValue $ PathField "a" PathNil)
+    (ViewKeyValue $ PathField "b" PathNil)
+
+fancyView2 :: View A Int
+fancyView2 = 
+  ViewByKeys1
+    (ViewKeyValue $ PathField "c" $ PathItem PathNil)
+
