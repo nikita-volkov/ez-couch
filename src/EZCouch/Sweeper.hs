@@ -31,11 +31,11 @@ readZombieEntityIsolations :: (MonadAction m)
 readZombieEntityIsolations = do
   now <- readTime
   readEntities
-    (ViewByKeys1 (ViewKeyValue $ PathField "till" PathNil))
-    (KeysSelectionRangeEnd now)
     0
     Nothing
     False
+    (KeysSelectionRangeEnd now)
+    (ViewByKeys1 (ViewKeyValue $ PathField "till" PathNil))
 
 releaseIsolations isolations = do
   logLn 1 $ "Sweeping " ++ show (length isolations) ++ " isolations"

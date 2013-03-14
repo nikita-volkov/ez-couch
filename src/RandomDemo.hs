@@ -55,14 +55,14 @@ main = run connectionSettings $ do
   printRandomAs
   printRandomAs
   printRandomAs
-  liftIO $ print $ readEntities fancyView 
-    (KeysSelectionRangeStart $ (0, 3, ""))
-    0 Nothing False
-  liftIO $ print $ readEntities fancyView2 KeysSelectionAll 0 Nothing False
+  liftIO . print =<<
+    readEntities''' (KeysSelectionRangeStart $ (2, 3, "")) fancyView
+  liftIO . print =<<
+    readEntities'''' fancyView2
 
 regenerateAs = do
   -- Fetch all existing entities of type `A`.
-  as :: [Persisted A] <- readEntities ViewById KeysSelectionAll 0 Nothing False
+  as :: [Persisted A] <- readEntities'''''
   -- Delete them all.
   deleteEntities as
   -- Create new ones.
