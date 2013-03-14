@@ -17,7 +17,7 @@ import qualified EZCouch.Model.View as ViewModel
 import qualified EZCouch.Base62 as Base62
 import Data.Hashable 
 import EZCouch.JS
-import Data.String.Interpolation
+import EZInterpolation
 
 
 type ViewModel = ViewModel.View
@@ -141,109 +141,101 @@ createOrUpdateView view
 viewKeysJS :: Entity a => View a k -> Maybe Text
 viewKeysJS view = case view of
   ViewById -> Nothing
-  ViewByKeys1 a -> Just $ 
-    let 
-      aJS = unpack $ toJS a
-    in 
-      pack [str| 
-        combinations([ 
-          $aJS$ 
-        ]) 
-      |]
+  ViewByKeys1 a -> Just $ toJS a
   ViewByKeys2 a b -> Just $ 
     let 
-      aJS = unpack $ toJS a
-      bJS = unpack $ toJS b
+      aJS = toJS a
+      bJS = toJS b
     in 
-      pack [str| 
+      [text| 
         combinations([ 
-          $aJS$, 
-          $bJS$ 
+          $aJS, 
+          $bJS 
         ])
       |]
   ViewByKeys3 a b c -> Just $ 
     let 
-      aJS = unpack $ toJS a
-      bJS = unpack $ toJS b
-      cJS = unpack $ toJS c
+      aJS = toJS a
+      bJS = toJS b
+      cJS = toJS c
     in 
-      pack [str| 
+      [text| 
         combinations([ 
-          $aJS$, 
-          $bJS$, 
-          $cJS$ 
+          $aJS, 
+          $bJS, 
+          $cJS 
         ])
       |]
   ViewByKeys4 a b c d -> Just $ 
     let 
-      aJS = unpack $ toJS a
-      bJS = unpack $ toJS b
-      cJS = unpack $ toJS c
-      dJS = unpack $ toJS d
+      aJS = toJS a
+      bJS = toJS b
+      cJS = toJS c
+      dJS = toJS d
     in 
-      pack [str| 
+      [text| 
         combinations([ 
-          $aJS$, 
-          $bJS$, 
-          $cJS$, 
-          $dJS$ 
+          $aJS, 
+          $bJS, 
+          $cJS, 
+          $dJS 
         ])
       |]
   ViewByKeys5 a b c d e -> Just $ 
     let 
-      aJS = unpack $ toJS a
-      bJS = unpack $ toJS b
-      cJS = unpack $ toJS c
-      dJS = unpack $ toJS d
-      eJS = unpack $ toJS e
+      aJS = toJS a
+      bJS = toJS b
+      cJS = toJS c
+      dJS = toJS d
+      eJS = toJS e
     in 
-      pack [str| 
+      [text| 
         combinations([ 
-          $aJS$, 
-          $bJS$, 
-          $cJS$, 
-          $dJS$, 
-          $eJS$ 
+          $aJS, 
+          $bJS, 
+          $cJS, 
+          $dJS, 
+          $eJS 
         ])
       |]
   ViewByKeys6 a b c d e f -> Just $ 
     let 
-      aJS = unpack $ toJS a
-      bJS = unpack $ toJS b
-      cJS = unpack $ toJS c
-      dJS = unpack $ toJS d
-      eJS = unpack $ toJS e
-      fJS = unpack $ toJS f
+      aJS = toJS a
+      bJS = toJS b
+      cJS = toJS c
+      dJS = toJS d
+      eJS = toJS e
+      fJS = toJS f
     in 
-      pack [str| 
+      [text| 
         combinations([ 
-          $aJS$, 
-          $bJS$, 
-          $cJS$, 
-          $dJS$, 
-          $eJS$, 
-          $fJS$ 
+          $aJS, 
+          $bJS, 
+          $cJS, 
+          $dJS, 
+          $eJS, 
+          $fJS 
         ])
       |]
   ViewByKeys7 a b c d e f g -> Just $ 
     let 
-      aJS = unpack $ toJS a
-      bJS = unpack $ toJS b
-      cJS = unpack $ toJS c
-      dJS = unpack $ toJS d
-      eJS = unpack $ toJS e
-      fJS = unpack $ toJS f
-      gJS = unpack $ toJS g
+      aJS = toJS a
+      bJS = toJS b
+      cJS = toJS c
+      dJS = toJS d
+      eJS = toJS e
+      fJS = toJS f
+      gJS = toJS g
     in 
-      pack [str| 
+      [text| 
         combinations([ 
-          $aJS$, 
-          $bJS$, 
-          $cJS$, 
-          $dJS$, 
-          $eJS$, 
-          $fJS$, 
-          $gJS$ 
+          $aJS, 
+          $bJS, 
+          $cJS, 
+          $dJS, 
+          $eJS, 
+          $fJS, 
+          $gJS 
         ])
       |]
 
@@ -254,7 +246,7 @@ viewMapFunctionJS view =
 
 mapFunctionJS :: Text -> Text -> Text
 mapFunctionJS designName expr = 
-  pack [str|
+  [text|
     function( doc ){
       function startsWith( start, string ){
         return string.lastIndexOf( start ) == 0
@@ -285,15 +277,11 @@ mapFunctionJS designName expr =
         })
       }
 
-      if( startsWith( '$designName'$-', doc._id ) ){
-        $expr'$
+      if( startsWith( '$designName-', doc._id ) ){
+        $expr
           .forEach( function( row ){ 
             emit( row, null ) 
           } )
       }
     }
   |]
-  where
-    designName' = unpack designName
-    expr' = unpack expr
-

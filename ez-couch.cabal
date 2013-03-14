@@ -69,7 +69,7 @@ library
                     classy-prelude-conduit,
                     hashable >= 1.1,
                     vector,
-                    Interpolation
+                    ez-interpolation
 
 source-repository head
   type:             git
