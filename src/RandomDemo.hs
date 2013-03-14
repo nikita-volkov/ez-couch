@@ -38,7 +38,7 @@ connectionSettings = ConnectionSettings {
 -- An entity of our model. This is the only data that we need to communicate
 -- with db. No intermediate objects or quirky types.
 -- Note: the entity must derive the `Generic` type imported from `GHC.Generics`.
-data A = A {a :: Int, b :: Text, c :: Maybe Double}
+data A = A {a :: Int, b :: Text, c :: [Double]}
   deriving (Show, Generic)
 -- Generate instances of Aeson's typeclasses using generics.
 instance ToJSON A
@@ -55,7 +55,14 @@ main = run connectionSettings $ do
   printRandomAs
   printRandomAs
   printRandomAs
+  readEntities fancyView KeysSelectionAll 0 Nothing False
 
+fancyView :: View A (Double, Int, Text)
+fancyView = 
+  ViewByKeys3
+    (ViewKeyValue $ PathField "c" $ PathItem PathNil)
+    (ViewKeyValue $ PathField "a" PathNil)
+    (ViewKeyValue $ PathField "b" PathNil)
 
 regenerateAs = do
   -- Fetch all existing entities of type `A`.
@@ -63,7 +70,7 @@ regenerateAs = do
   -- Delete them all.
   deleteEntities as
   -- Create new ones.
-  createEntities $ map (\i -> A i "a" Nothing) [0..7]
+  createEntities $ map (\i -> A i "a" [1,2,3]) [0..7]
 
 printRandomAs = do
   -- Fetch at most 2 random entities.

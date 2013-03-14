@@ -31,7 +31,7 @@ readZombieEntityIsolations :: (MonadAction m)
 readZombieEntityIsolations = do
   now <- readTime
   readEntities
-    (ViewByKeys1 (ViewKeyField "till"))
+    (ViewByKeys1 (ViewKeyValue $ PathField "till" PathNil))
     (KeysSelectionRangeEnd now)
     0
     Nothing
