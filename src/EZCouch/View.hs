@@ -17,7 +17,7 @@ import qualified EZCouch.Model.View as ViewModel
 import qualified EZCouch.Base62 as Base62
 import Data.Hashable 
 import EZCouch.JS
-import EZInterpolation
+import NeatInterpolation
 
 
 type ViewModel = ViewModel.View
