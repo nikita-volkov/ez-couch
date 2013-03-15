@@ -25,7 +25,7 @@ inIsolation timeout id action = do
   result <- try $ createIdentifiedEntity (id', Isolation time)
   case result of
     Left (OperationException _) -> do
-      isolation <- readEntity ViewById (KeysSelectionList [id']) 0 False
+      isolation <- readEntity 0 False (KeysSelectionList [id']) ViewById
       case isolation of
         Just isolation -> do
           if (Isolation.since . persistedValue) isolation < Time.addUTCTime (negate $ fromIntegral timeout) time

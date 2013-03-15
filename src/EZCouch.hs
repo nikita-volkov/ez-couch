@@ -8,13 +8,26 @@ module EZCouch (
   createEntity,
   createEntities,
   -- ** Reading 
+  KeysSelection(..),
   readEntities,
   readRandomEntities,
   readEntity,
   readKeysExist,
   readKeys,
   readCount,
-  KeysSelection(..),
+  -- ** Reading functions shortcuts
+  readKeys',
+  readCount',
+  readKeysExist',
+  readEntities',
+  readEntities'',
+  readEntities''',
+  readEntities'''',
+  readEntities''''',
+  readEntity',
+  readEntity'',
+  readEntity''',
+  readEntity'''',
   -- ** Updating 
   updateEntity,
   updateEntities,
@@ -28,6 +41,7 @@ module EZCouch (
   -- * Working with Views
   View(..),
   ViewKey(..),
+  Path(..),
 
   -- * Transactions
   -- | CouchDB doesn't provide a way to do traditional locking-based transactions, as it applies an Optimistic Concurrency Control strategy (<http://en.wikipedia.org/wiki/Optimistic_concurrency_control>). EZCouch approaches the issue by providing a way to easily isolate entities from being accessed by concurrent clients, which you can use to build all kinds of transactions upon.

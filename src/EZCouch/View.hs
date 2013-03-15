@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, DeriveGeneric, GADTs, StandaloneDeriving #-}
+{-# LANGUAGE OverloadedStrings, NoMonomorphismRestriction, FlexibleContexts, MultiParamTypeClasses, ScopedTypeVariables, DeriveDataTypeable, DeriveGeneric, GADTs, StandaloneDeriving, QuasiQuotes #-}
 module EZCouch.View where
 
 import Prelude ()
@@ -17,34 +17,37 @@ import qualified EZCouch.Model.View as ViewModel
 import qualified EZCouch.Base62 as Base62
 import Data.Hashable 
 import EZCouch.JS
+import NeatInterpolation
+
 
 type ViewModel = ViewModel.View
 type DesignModel = DesignModel.Design
 
+data Path = 
+  PathField Text Path |
+  PathItem Path |
+  PathNil
+  deriving (Show, Eq)
+
+pathJS :: Path -> Text -> Text
+pathJS (PathNil) js = js
+pathJS (PathField name tail) js =
+  pathJS tail $ js ++ ".map( function( it ){ return it." ++ name ++ " } )"
+pathJS (PathItem tail) js =
+  pathJS tail $ "join( " ++ js ++ " )"
 
 data ViewKey a = 
-  ViewKeyField Text |
+  ViewKeyValue Path |
   -- ^ A path to a field value.
-  -- 
-  -- Assuming the following record declarations:
-  -- 
-  -- > data A = A { b :: B }
-  -- > data B = B { c :: Int }
-  -- 
-  -- A path value of @\"b.c\"@ will emit the values of the @c@ field of a JSON 
-  -- object representing the record @B@ in a view key of type @ViewKey A@.
-  -- 
-  -- Yes, it's not static. But it's probably the only place in the library that 
-  -- the compiler doesn't check for you.
   ViewKeyRandom
   -- ^ This will emit a JavaScript @Math.random()@ value as a key. This is what 
   -- makes the querying for random entities possible.
   deriving (Show, Eq)
 
-
 instance ToJS (ViewKey a) where
-  toJS (ViewKeyField field) = "doc." ++ field
-  toJS ViewKeyRandom = "Math.random()"
+  toJS (ViewKeyValue path) = pathJS path "[ doc ]"
+  toJS ViewKeyRandom = "[ Math.random() ]"
+
 instance Hashable (ViewKey a) where
   hashWithSalt salt = hashWithSalt salt . toJS
 
@@ -120,25 +123,6 @@ viewDesignName :: (Entity a) => View a k -> Maybe Text
 viewDesignName ViewById = Nothing
 viewDesignName view = entityType . (undefined :: View a k -> a) <$> Just view
 
-viewKeysJS view = case view of
-  ViewById -> Nothing
-  ViewByKeys1 a -> Just $ toJS a
-  ViewByKeys2 a b -> Just $ toJS (a, b)
-  ViewByKeys3 a b c -> Just $ toJS (a, b, c)
-  ViewByKeys4 a b c d -> Just $ toJS (a, b, c, d)
-  ViewByKeys5 a b c d e -> Just $ toJS (a, b, c, d, e)
-  ViewByKeys6 a b c d e f -> Just $ toJS (a, b, c, d, e, f)
-  ViewByKeys7 a b c d e f g -> Just $ toJS (a, b, c, d, e, f, g)
-
-viewMapFunctionJS :: (Entity a) => View a k -> Maybe Text
-viewMapFunctionJS view = fmap concat $ sequence [
-    pure "function (doc) { if (doc._id.lastIndexOf('",
-    viewDesignName view,
-    pure "-') == 0) emit(",
-    viewKeysJS view,
-    pure ", null) }"
-  ]
-
 viewPath :: (Entity a) => View a k -> [Text]
 viewPath view = case view of
   ViewById -> ["_all_docs"]
@@ -153,3 +137,151 @@ createOrUpdateView view
     Just model <- ViewModel.View <$> viewMapFunctionJS view <*> pure Nothing
     = createOrUpdateDesignView name model
   | otherwise = error "EZCouch.View.createOrUpdateView: Attempt to persist a view which does not support it"
+
+viewKeysJS :: Entity a => View a k -> Maybe Text
+viewKeysJS view = case view of
+  ViewById -> Nothing
+  ViewByKeys1 a -> Just $ toJS a
+  ViewByKeys2 a b -> Just $ 
+    let 
+      aJS = toJS a
+      bJS = toJS b
+    in 
+      [text| 
+        combinations([ 
+          $aJS, 
+          $bJS 
+        ])
+      |]
+  ViewByKeys3 a b c -> Just $ 
+    let 
+      aJS = toJS a
+      bJS = toJS b
+      cJS = toJS c
+    in 
+      [text| 
+        combinations([ 
+          $aJS, 
+          $bJS, 
+          $cJS 
+        ])
+      |]
+  ViewByKeys4 a b c d -> Just $ 
+    let 
+      aJS = toJS a
+      bJS = toJS b
+      cJS = toJS c
+      dJS = toJS d
+    in 
+      [text| 
+        combinations([ 
+          $aJS, 
+          $bJS, 
+          $cJS, 
+          $dJS 
+        ])
+      |]
+  ViewByKeys5 a b c d e -> Just $ 
+    let 
+      aJS = toJS a
+      bJS = toJS b
+      cJS = toJS c
+      dJS = toJS d
+      eJS = toJS e
+    in 
+      [text| 
+        combinations([ 
+          $aJS, 
+          $bJS, 
+          $cJS, 
+          $dJS, 
+          $eJS 
+        ])
+      |]
+  ViewByKeys6 a b c d e f -> Just $ 
+    let 
+      aJS = toJS a
+      bJS = toJS b
+      cJS = toJS c
+      dJS = toJS d
+      eJS = toJS e
+      fJS = toJS f
+    in 
+      [text| 
+        combinations([ 
+          $aJS, 
+          $bJS, 
+          $cJS, 
+          $dJS, 
+          $eJS, 
+          $fJS 
+        ])
+      |]
+  ViewByKeys7 a b c d e f g -> Just $ 
+    let 
+      aJS = toJS a
+      bJS = toJS b
+      cJS = toJS c
+      dJS = toJS d
+      eJS = toJS e
+      fJS = toJS f
+      gJS = toJS g
+    in 
+      [text| 
+        combinations([ 
+          $aJS, 
+          $bJS, 
+          $cJS, 
+          $dJS, 
+          $eJS, 
+          $fJS, 
+          $gJS 
+        ])
+      |]
+
+
+viewMapFunctionJS :: (Entity a) => View a k -> Maybe Text
+viewMapFunctionJS view = 
+  mapFunctionJS <$> viewDesignName view <*> viewKeysJS view
+
+mapFunctionJS :: Text -> Text -> Text
+mapFunctionJS designName expr = 
+  [text|
+    function( doc ){
+      function startsWith( start, string ){
+        return string.lastIndexOf( start ) == 0
+      }
+      function join( it ){ 
+        return [].concat.apply( [], it ) 
+      }
+      function tail( array ){ 
+        return array.slice(1)
+      }
+      function cons( head, array ){ 
+        return [ head ].concat(array) 
+      }
+      function combinations( arrays ){
+        if( arrays.length == 0 ) return []
+        else if( arrays.length == 1 ) return arrays[0]
+        else return join( 
+          arrays[0].map( function( it ){ 
+            return combinations( tail( arrays ) ).map( function( row ){
+              return cons( it, row )
+            } )
+          } )
+        )
+      }
+      function zip( arrays ){
+        return arrays[0].map( function( _, i ){
+          return arrays.map( function( array ){ return array[i] } )
+        })
+      }
+
+      if( startsWith( '$designName-', doc._id ) ){
+        $expr
+          .forEach( function( row ){ 
+            emit( row, null ) 
+          } )
+      }
+    }
+  |]

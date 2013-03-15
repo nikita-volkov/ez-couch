@@ -68,7 +68,8 @@ library
                     classy-prelude >= 0.5.0,
                     classy-prelude-conduit,
                     hashable >= 1.1,
-                    vector 
+                    vector,
+                    neat-interpolation
 
 source-repository head
   type:             git

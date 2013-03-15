@@ -29,14 +29,14 @@ data KeysSelection k
 
 
 readAction :: (MonadAction m, Entity a, ToJSON k)
-  => View a k -- ^ View
-  -> KeysSelection k -- ^ Keys selection mode
+  => Bool -- ^ Include docs
   -> Int -- ^ Skip
   -> Maybe Int -- ^ Limit
   -> Bool -- ^ Descending
-  -> Bool -- ^ Include docs
+  -> KeysSelection k -- ^ Keys selection mode
+  -> View a k -- ^ View
   -> m Value -- ^ An unparsed response body JSON
-readAction view mode skip limit desc includeDocs = do
+readAction includeDocs skip limit desc mode view = do
   result <- action path qps body 
   case result of
     ResponseNotFound -> do
@@ -89,46 +89,46 @@ includeDocsQP False = Nothing
 
 
 readKeys :: (MonadAction m, Entity a, ToJSON k, FromJSON k) 
-  => View a k -- ^ View
-  -> KeysSelection k -- ^ Keys selection mode
+  => KeysSelection k -- ^ Keys selection mode
+  -> View a k -- ^ View
   -> m [k] 
-readKeys view mode = fmap (map fst . filter snd) $ readKeysExist view mode
+readKeys mode view = fmap (map fst . filter snd) $ readKeysExist mode view
 
 readCount :: (MonadAction m, Entity a, ToJSON k, FromJSON k)
-  => View a k -- ^ View
-  -> KeysSelection k -- ^ Keys selection mode
+  => KeysSelection k -- ^ Keys selection mode
+  -> View a k -- ^ View
   -> m Int
-readCount view mode = fmap length $ readKeys view mode
+readCount mode view = fmap length $ readKeys mode view
 
 readKeysExist :: (MonadAction m, Entity a, ToJSON k, FromJSON k) 
-  => View a k -- ^ View
-  -> KeysSelection k -- ^ Keys selection mode
+  => KeysSelection k -- ^ Keys selection mode
+  -> View a k -- ^ View
   -> m [(k, Bool)] 
   -- ^ An associative list of `Bool` values by keys designating the existance of appropriate entities
-readKeysExist view mode =
-  readAction view mode 0 Nothing False False
+readKeysExist mode view =
+  readAction False 0 Nothing False mode view
     >>= runParser (rowsParser1 >=> mapM keyExistsParser . toList) 
 
 readEntities :: (MonadAction m, Entity a, ToJSON k)
-  => View a k -- ^ View
-  -> KeysSelection k -- ^ Keys selection mode
-  -> Int -- ^ Skip
+  => Int -- ^ Skip
   -> Maybe Int -- ^ Limit
   -> Bool -- ^ Descending
+  -> KeysSelection k -- ^ Keys selection mode
+  -> View a k -- ^ View
   -> m [Persisted a]
-readEntities view mode skip limit desc =
-  readAction view mode skip limit desc True
+readEntities skip limit desc mode view =
+  readAction True skip limit desc mode view
     >>= runParser (rowsParser1 >=> mapM persistedParser . toList) 
     >>= return . catMaybes
 
 readEntity :: (MonadAction m, Entity a, ToJSON k)
-  => View a k -- ^ View
-  -> KeysSelection k -- ^ Keys selection mode
-  -> Int -- ^ Skip
+  => Int -- ^ Skip
   -> Bool -- ^ Descending
+  -> KeysSelection k -- ^ Keys selection mode
+  -> View a k -- ^ View
   -> m (Maybe (Persisted a))
-readEntity view mode skip desc = 
-  listToMaybe <$> readEntities view mode skip (Just 1) desc
+readEntity skip desc mode view = 
+  listToMaybe <$> readEntities skip (Just 1) desc mode view
 
 readRandomEntities :: (MonadAction m, Entity a) 
   => Maybe Int -- ^ Limit
@@ -136,9 +136,23 @@ readRandomEntities :: (MonadAction m, Entity a)
 readRandomEntities limit = do
   startKey :: Double <- liftIO $ Random.randomRIO (0.0, 1.0)
   readEntities 
-    (ViewByKeys1 ViewKeyRandom) 
-    (KeysSelectionRangeStart startKey)
     0
     limit
     False
+    (KeysSelectionRangeStart startKey)
+    (ViewByKeys1 ViewKeyRandom) 
 
+
+-- * Versions with defaults:
+readKeys' = readKeys KeysSelectionAll
+readCount' = readCount KeysSelectionAll
+readKeysExist' = readKeysExist KeysSelectionAll
+readEntities' = readEntities 0
+readEntities'' = readEntities 0 Nothing
+readEntities''' = readEntities 0 Nothing False
+readEntities'''' = readEntities 0 Nothing False KeysSelectionAll
+readEntities''''' = readEntities 0 Nothing False KeysSelectionAll ViewById
+readEntity' = readEntity 0
+readEntity'' = readEntity 0 False
+readEntity''' = readEntity 0 False KeysSelectionAll
+readEntity'''' = readEntity 0 False KeysSelectionAll ViewById
