@@ -66,7 +66,6 @@ module EZCouch (
   run,
   runWithManager,
   ConnectionSettings(..),
-  defaultPort,
   EZCouchException(..),
 
   -- * Classes which records should implement

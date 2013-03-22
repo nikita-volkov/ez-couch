@@ -23,12 +23,10 @@ import qualified EZCouch.Model.Error as Error
 data ConnectionSettings 
   = ConnectionSettings {  
       connectionSettingsHost :: Text,
-      connectionSettingsPort :: Int,
+      connectionSettingsPort :: Maybe Int,
       connectionSettingsAuth :: Maybe (Text, Text),
       connectionSettingsDatabase :: Text
     }
-
-defaultPort = 5984 :: Int
 
 type Environment = (ConnectionSettings, HTTP.Manager, NominalDiffTime)
 
@@ -54,7 +52,7 @@ generateRequest method dbPath qps body = do
         HTTP.method = method,
         HTTP.host = encodeUtf8 host,
         HTTP.requestHeaders = headers,
-        HTTP.port = port,
+        HTTP.port = fromMaybe 5984 port,
         HTTP.path = packPath $ maybe [] (database : ) $ dbPath,
         HTTP.queryString = query,
         HTTP.requestBody = HTTP.RequestBodyLBS body,
