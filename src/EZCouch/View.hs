@@ -32,9 +32,18 @@ data Path =
 pathJS :: Path -> Text -> Text
 pathJS (PathNil) js = js
 pathJS (PathField name tail) js =
-  pathJS tail $ js ++ ".map( function( it ){ return it." ++ name ++ " } )"
+  pathJS tail $ 
+    [text|
+      $js
+        .map( function( it ){ return it.$name } )
+    |]
 pathJS (PathItem tail) js =
-  pathJS tail $ "join( " ++ js ++ " )"
+  pathJS tail $ 
+    [text|
+      join( 
+        $js
+      )
+    |]
 
 data ViewKey a = 
   ViewKeyValue Path |
@@ -274,7 +283,7 @@ mapFunctionJS designName expr =
       function zip( arrays ){
         return arrays[0].map( function( _, i ){
           return arrays.map( function( array ){ return array[i] } )
-        })
+        } )
       }
 
       if( startsWith( '$designName-', doc._id ) ){
