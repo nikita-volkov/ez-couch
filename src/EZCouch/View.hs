@@ -48,14 +48,21 @@ pathJS (PathItem tail) js =
 data ViewKey a = 
   ViewKeyValue Path |
   -- ^ A path to a field value.
-  ViewKeyRandom
-  -- ^ This will emit a JavaScript @Math.random()@ value as a key. This is what 
-  -- makes the querying for random entities possible.
+  ViewKeyFloatRevHash
+  -- ^ A floating point number in range @0 <= x <= 1@ based on the revision
+  -- hash of the document. 
+  -- 
+  -- This is used to simulate an output @Math.random()@ for random fetching, 
+  -- while producing a stable value across all database replicas.
   deriving (Show, Eq)
 
 instance ToJS (ViewKey a) where
   toJS (ViewKeyValue path) = pathJS path "[ doc ]"
-  toJS ViewKeyRandom = "[ Math.random() ]"
+  toJS ViewKeyFloatRevHash = [text|
+    [ 
+      parseInt( doc._rev.split("-", 2)[1], 16 ) / 3.402823669209385e+38
+    ]
+  |]
 
 instance Hashable (ViewKey a) where
   hashWithSalt salt = hashWithSalt salt . toJS

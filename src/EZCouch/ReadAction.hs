@@ -140,7 +140,7 @@ readRandomEntities limit = do
     limit
     False
     (KeysSelectionRangeStart startKey)
-    (ViewByKeys1 ViewKeyRandom) 
+    (ViewByKeys1 ViewKeyFloatRevHash) 
 
 
 -- * Versions with defaults:
