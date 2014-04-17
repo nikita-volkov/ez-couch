@@ -49,7 +49,7 @@ library
   build-depends:    base >= 4.5 && < 5,
                     ghc-prim >= 0.2,
                     time >= 1.4,
-                    aeson >= 0.6,
+                    aeson == 0.6.*,
                     attoparsec >= 0.10,
                     attoparsec-conduit >= 0.5,
                     http-conduit == 1.9.*,
@@ -65,11 +65,11 @@ library
                     random >= 1.0,
                     resourcet >= 0.3,
                     string-conversions >= 0.2,
-                    classy-prelude >= 0.5.0,
-                    classy-prelude-conduit,
+                    classy-prelude == 0.5.*,
+                    classy-prelude-conduit == 0.5.*,
                     hashable >= 1.1,
                     vector,
-                    neat-interpolation
+                    neat-interpolation == 0.1.*
 
 source-repository head
   type:             git
